@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Nunito, Fredoka } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from "@/components/ThemeProvider";
