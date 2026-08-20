@@ -1,0 +1,50 @@
+ 
+ -------------- celery@PSTs-MacBook-Air.local v5.6.3 (recovery)
+--- ***** ----- 
+-- ******* ---- macOS-26.5-arm64-arm-64bit 2026-08-08 20:37:16
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         worker:0x10b0ee540
+- ** ---------- .> transport:   redis://localhost:6379/0
+- ** ---------- .> results:     redis://localhost:6379/0
+- *** --- * --- .> concurrency: 10 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+
+
+[2026-08-08 20:37:16,987: INFO/MainProcess] Connected to redis://localhost:6379/0
+[2026-08-08 20:37:16,991: INFO/MainProcess] mingle: searching for neighbors
+[2026-08-08 20:37:18,004: INFO/MainProcess] mingle: all alone
+[2026-08-08 20:37:18,032: INFO/MainProcess] celery@PSTs-MacBook-Air.local ready.
+[2026-08-08 20:37:21,405: ERROR/MainProcess] Received unregistered task of type 'extract_goals'.
+The message has been ignored and discarded.
+
+Did you remember to import the module containing this task?
+Or maybe you're using relative imports?
+
+Please see
+https://docs.celeryq.dev/en/latest/internals/protocol.html
+for more information.
+
+The full contents of the message body was:
+b'[[], {"user_id": "user_mock123", "text": "I want to improve my speech."}, {"callbacks": null, "errbacks": null, "chain": null, "chord": null}]' (142b)
+
+The full contents of the message headers:
+{'lang': 'py', 'task': 'extract_goals', 'id': '53336e78-c7cd-42cb-ac0d-4ff36f1e264f', 'shadow': None, 'eta': None, 'expires': None, 'group': None, 'group_index': None, 'retries': 0, 'timelimit': [None, None], 'root_id': '53336e78-c7cd-42cb-ac0d-4ff36f1e264f', 'parent_id': None, 'argsrepr': '()', 'kwargsrepr': "{'user_id': 'user_mock123', 'text': 'I want to improve my speech.'}", 'origin': 'gen54064@PSTs-MacBook-Air.local', 'ignore_result': False, 'replaced_task_nesting': 0, 'stamped_headers': None, 'stamps': {}}
+
+The delivery info for this task is:
+{'exchange': '', 'routing_key': 'celery'}
+Traceback (most recent call last):
+  File "/Users/pstmacbook/Documents/Sanat-Personal/Special Education/backend/.venv/lib/python3.12/site-packages/celery/worker/consumer/consumer.py", line 668, in on_task_received
+    strategy = strategies[type_]
+               ~~~~~~~~~~^^^^^^^
+KeyError: 'extract_goals'
+
+worker: Warm shutdown (MainProcess)
+
+worker: Warm shutdown (MainProcess)
