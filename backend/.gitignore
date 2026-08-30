@@ -8,3 +8,9 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Proprietary Data & RAG Indices
+data/approved_videos.json
+data/*_faiss_index/
+data/*.json
+data/checklists/
