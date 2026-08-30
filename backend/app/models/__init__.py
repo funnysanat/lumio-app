@@ -3,3 +3,4 @@ from app.models.user import User
 from app.models.organization import Organization
 from app.models.child import ChildProfile, TherapyGoal, InterestProfile
 from app.models.activity import DailyPlan, ActivitySession
+from app.models.youtube_video import CuratedYouTubeVideo
