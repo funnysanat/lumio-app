@@ -15,6 +15,7 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+https://lumio-app-theta.vercel.app/
 
 Make sure your FastAPI server (`uv run uvicorn app.main:app --reload`) and Celery worker (`uv run celery -A app.worker.celery_app worker --loglevel=info`) are running!
 
