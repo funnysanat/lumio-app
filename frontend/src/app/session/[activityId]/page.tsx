@@ -257,7 +257,7 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
       : `https://www.youtube.com/results?search_query=${encodeURIComponent(activity.title + " " + activity.goal)}`;
 
     return (
-      <div className="container animate-fade-in" style={{ paddingTop: '100px', maxWidth: '600px', textAlign: 'center' }}>
+      <div className="page-wrapper container-md animate-fade-in" style={{ textAlign: 'center' }}>
         <h1>{activity.title}</h1>
         <p style={{ color: '#a1a1aa', fontSize: '1.25rem', marginBottom: '2rem' }}>
           Goal: {activity.goal}

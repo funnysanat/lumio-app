@@ -68,7 +68,7 @@ export default async function ProgressPage() {
         </div>
       </header>
 
-      <main className="container animate-fade-in" style={{ paddingTop: '100px', maxWidth: '800px' }}>
+      <main className="page-wrapper container-lg animate-fade-in">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
           <div>
             <h1 style={{ margin: 0 }}>Progress Tracking</h1>
