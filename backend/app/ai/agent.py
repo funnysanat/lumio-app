@@ -30,7 +30,7 @@ class Activity(BaseModel):
     reason: str = Field(description="A one-line explanation of why this activity was chosen today for this specific child")
     emoji: str = Field(description="A single relevant emoji representing this activity (e.g. 🚂, 💦, 🎨)")
     steps: List[str] = Field(description="A clear, numbered array of step-by-step instructions for the caregiver to follow during the activity.", default=[])
-    video_search_query: str = Field(description="A highly specific YouTube search query that combines the specific clinical therapy discipline (e.g., 'Sensory Integration Therapy', 'Speech Language Pathology', 'Joint Attention Therapy') with the exact activity materials to ensure results are from professional pediatric therapists (e.g., 'Sensory integration therapy shaving cream play').", default="")
+    video_search_query: str = Field(description="A 3-5 word query to search for a therapy video demonstrating this skill (e.g. 'Occupational therapy fine motor beads', 'Speech therapy bubble blowing')", default="")
     audio_lang_code: str = Field(description="The BCP-47 language code corresponding to the language this activity is written in (e.g., 'en-US' for English, 'hi-IN' for Hindi, 'es-ES' for Spanish, 'bn-IN' for Bengali).", default="en-US")
 
 class DailyPlanOut(BaseModel):
@@ -43,7 +43,9 @@ llm = ChatGoogleGenerativeAI(
 
 structured_llm = llm.with_structured_output(DailyPlanOut)
 
-def generate_plan(state: AgentState):
+
+
+async def generate_plan(state: AgentState):
     messages = state["messages"]
     prompt = messages[-1].content
     
@@ -81,7 +83,7 @@ def generate_plan(state: AgentState):
         f"{retrieved_context}"
     )
     
-    response = structured_llm.invoke(system_prompt)
+    response = await structured_llm.ainvoke(system_prompt)
     
     return {"daily_plan": response.model_dump()}
 
