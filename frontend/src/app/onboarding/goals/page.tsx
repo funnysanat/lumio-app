@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
@@ -9,6 +9,32 @@ export default function GoalsPage() {
   const router = useRouter();
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [initialGoals, setInitialGoals] = useState<string[]>(['', '', '']);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const token = await getToken();
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${API_URL}/api/v1/onboarding/goals`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.goals && data.goals.length > 0) {
+            setInitialGoals([
+              data.goals[0] || '',
+              data.goals[1] || '',
+              data.goals[2] || ''
+            ]);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadData();
+  }, [getToken]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -71,7 +97,7 @@ export default function GoalsPage() {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Goal 1</label>
-            <select name="goal1" className="form-select">
+            <select name="goal1" className="form-select" defaultValue={initialGoals[0]} key={initialGoals[0]}>
               <option value="">Select a goal...</option>
               <option value="Improve expressive language (speaking & vocabulary)">Improve expressive language (speaking & vocabulary)</option>
               <option value="Improve receptive language (understanding instructions)">Improve receptive language (understanding instructions)</option>
@@ -86,7 +112,7 @@ export default function GoalsPage() {
 
           <div className="form-group">
             <label className="form-label">Goal 2</label>
-            <select name="goal2" className="form-select">
+            <select name="goal2" className="form-select" defaultValue={initialGoals[1]} key={initialGoals[1]}>
               <option value="">Select a goal...</option>
               <option value="Improve expressive language (speaking & vocabulary)">Improve expressive language (speaking & vocabulary)</option>
               <option value="Improve receptive language (understanding instructions)">Improve receptive language (understanding instructions)</option>
@@ -101,7 +127,7 @@ export default function GoalsPage() {
 
           <div className="form-group">
             <label className="form-label">Goal 3</label>
-            <select name="goal3" className="form-select">
+            <select name="goal3" className="form-select" defaultValue={initialGoals[2]} key={initialGoals[2]}>
               <option value="">Select a goal...</option>
               <option value="Improve expressive language (speaking & vocabulary)">Improve expressive language (speaking & vocabulary)</option>
               <option value="Improve receptive language (understanding instructions)">Improve receptive language (understanding instructions)</option>

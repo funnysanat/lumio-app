@@ -159,6 +159,21 @@ async def save_therapy_goals(
     await db.commit()
     return {"status": "success"}
 
+@router.get("/goals")
+async def get_therapy_goals(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(ChildProfile).filter(ChildProfile.user_id == current_user.id))
+    child = result.scalars().first()
+    if not child:
+        return {"status": "success", "goals": []}
+        
+    result = await db.execute(select(TherapyGoal).filter(TherapyGoal.child_id == child.id))
+    goals = [g.goal_text for g in result.scalars().all()]
+    return {"status": "success", "goals": goals}
+
+
 @router.post("/interests")
 async def save_interests(
     data: InterestProfileCreate,
@@ -191,6 +206,23 @@ async def save_interests(
     task = generate_plan_task.delay(current_user.id)
     
     return {"status": "success", "task_id": task.id}
+
+@router.get("/interests")
+async def get_interests(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(ChildProfile).filter(ChildProfile.user_id == current_user.id))
+    child = result.scalars().first()
+    if not child:
+        return {"status": "success", "interests": "", "reward_type": ""}
+        
+    result = await db.execute(select(InterestProfile).filter(InterestProfile.child_id == child.id))
+    interest = result.scalars().first()
+    if interest:
+        return {"status": "success", "interests": interest.interests, "reward_type": interest.reward_type}
+    return {"status": "success", "interests": "", "reward_type": ""}
+
 
 @router.post("/assessment")
 async def save_developmental_assessment(

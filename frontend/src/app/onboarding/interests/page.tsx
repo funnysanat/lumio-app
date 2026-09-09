@@ -70,8 +70,21 @@ export default function InterestsPage() {
             ageInMonths = data.snapshot.chronological_age_months;
           }
         }
-        
         setDevAgeMonths(ageInMonths);
+
+        // Fetch Interests and Rewards
+        const interestsRes = await fetch(`${API_URL}/api/v1/onboarding/interests`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (interestsRes.ok) {
+          const intData = await interestsRes.json();
+          if (intData.interests) {
+            setCheckedInterests(intData.interests.split(',').map((s: string) => s.trim()));
+          }
+          if (intData.reward_type) {
+            setRewardType(intData.reward_type);
+          }
+        }
       } catch (err) {
         console.error("Failed to fetch assessment", err);
       } finally {
