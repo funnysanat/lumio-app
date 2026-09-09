@@ -14,7 +14,8 @@
     "qrcode.react": "^4.2.0",
     "react": "19.2.8",
     "react-activity-calendar": "^3.2.1",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@types/node": "^20",

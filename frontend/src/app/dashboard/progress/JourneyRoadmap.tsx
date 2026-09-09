@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useAppStore } from '@/store/useAppStore';
 
 type SnapshotData = {
   assessment_date: string;
@@ -24,9 +25,9 @@ const ROADMAP_STEPS = [
 
 export default function JourneyRoadmap() {
   const { getToken } = useAuth();
-  const [snapshot, setSnapshot] = useState<SnapshotData | null>(null);
-  const [gender, setGender] = useState<string>("other");
-  const [loading, setLoading] = useState(true);
+  
+  const { snapshot: cachedSnapshot, child, setSnapshot, setChild } = useAppStore();
+  const [loading, setLoading] = useState(!cachedSnapshot);
 
   useEffect(() => {
     async function fetchData() {
@@ -35,21 +36,31 @@ export default function JourneyRoadmap() {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         
         // Fetch Assessment
-        const resAsses = await fetch(`${API_URL}/api/v1/onboarding/assessment`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (resAsses.ok) {
-          const data = await resAsses.json();
-          setSnapshot(data.snapshot);
+        try {
+          const resAsses = await fetch(`${API_URL}/api/v1/onboarding/assessment`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (resAsses.ok) {
+            const data = await resAsses.json();
+            if (data.snapshot) setSnapshot(data.snapshot);
+          }
+        } catch(e) {
+          console.error(e);
         }
 
-        // Fetch Child Profile
-        const resChild = await fetch(`${API_URL}/api/v1/onboarding/child`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (resChild.ok) {
-          const data = await resChild.json();
-          setGender(data.child?.gender?.toLowerCase() || "other");
+        // Fetch Child Profile (in case not fetched yet)
+        if (!child) {
+          try {
+            const resChild = await fetch(`${API_URL}/api/v1/onboarding/child`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (resChild.ok) {
+              const data = await resChild.json();
+              if (data.child) setChild(data.child);
+            }
+          } catch(e) {
+            console.error(e);
+          }
         }
 
       } catch (err) {
@@ -59,9 +70,9 @@ export default function JourneyRoadmap() {
       }
     }
     fetchData();
-  }, [getToken]);
+  }, [getToken, setSnapshot, setChild, child]);
 
-  if (loading) {
+  if (loading && !cachedSnapshot) {
     return <div className="card" style={{ padding: '2rem', textAlign: 'center', color: '#a1a1aa' }}>Loading roadmap...</div>;
   }
 
@@ -69,8 +80,8 @@ export default function JourneyRoadmap() {
   let maxBandIndex = -1;
   let currentBand = "0-6 months";
   
-  if (snapshot?.domain_scores) {
-    const scores = snapshot.domain_scores;
+  if (cachedSnapshot?.domain_scores) {
+    const scores = cachedSnapshot.domain_scores;
     const bandKeys = ["0-6 months", "6-12 months", "12-18 months", "18-24 months", "24-36 months", "36-48 months"];
     
     Object.values(scores).forEach(band => {
@@ -89,7 +100,8 @@ export default function JourneyRoadmap() {
     ? ROADMAP_STEPS.findIndex(s => s.band === currentBand) 
     : 0; 
 
-  const pointerEmoji = gender === 'male' ? '👦' : (gender === 'female' ? '👧' : '👶');
+  const genderStr = child?.gender?.toLowerCase() || "other";
+  const pointerEmoji = genderStr === 'male' ? '👦' : (genderStr === 'female' ? '👧' : '👶');
 
   return (
     <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
