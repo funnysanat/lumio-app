@@ -260,16 +260,19 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
     };
 
     return (
-      <div className="container animate-fade-in" style={{ paddingTop: '100px', maxWidth: '600px', textAlign: 'center' }}>
+      <div className="page-wrapper container-md animate-fade-in" style={{ textAlign: 'center' }}>
         <h1>{activity.title}</h1>
         <p style={{ color: '#a1a1aa', fontSize: '1.25rem', marginBottom: '2rem' }}>
           Goal: {activity.goal}
         </p>
         
-        {activity.youtube_video_id && showVideo && (
+        {showVideo && (
           <div className="animate-fade-in" style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', maxWidth: '100%', backgroundColor: '#000', borderRadius: '0.5rem', marginBottom: '2rem' }}>
             <iframe 
-              src={`https://www.youtube.com/embed/${activity.youtube_video_id}?autoplay=1`} 
+              src={activity.youtube_video_id 
+                ? `https://www.youtube.com/embed/${activity.youtube_video_id}?autoplay=1` 
+                : `https://www.youtube.com/embed/videoseries?listType=search&list=${encodeURIComponent(activity.goal)}&autoplay=1`
+              }
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
               frameBorder="0" 
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -283,11 +286,9 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
             <span>{isAudioPlaying ? '⏸' : '🔊'}</span> {isAudioPlaying ? 'Stop Audio' : t.listen}
           </button>
           
-          {activity.youtube_video_id && (
-            <button onClick={() => setShowVideo(!showVideo)} className="btn" style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>🎥</span> {showVideo ? 'Hide Video' : `Watch video on ${getShortGoal(activity.goal)}`}
-            </button>
-          )}
+          <button onClick={() => setShowVideo(!showVideo)} className="btn" style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>🎥</span> {showVideo ? 'Hide Video' : `Watch video on ${getShortGoal(activity.goal)}`}
+          </button>
         </div>
 
         <div className="card" style={{ textAlign: 'left', marginBottom: '2rem' }}>

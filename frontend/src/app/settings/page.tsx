@@ -39,7 +39,7 @@ export default async function SettingsPage() {
         </div>
       </header>
 
-      <main className="container animate-fade-in" style={{ paddingTop: '100px', maxWidth: '600px' }}>
+      <main className="page-wrapper container-sm animate-fade-in">
         <h1 style={{ marginBottom: '2rem' }}>Settings</h1>
 
         <section style={{ marginBottom: '3rem' }}>
@@ -65,7 +65,7 @@ export default async function SettingsPage() {
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ margin: 0 }}>{childName}</h3>
-              <Link href="/onboarding/child" style={{ color: 'var(--primary)', fontSize: '0.875rem' }}>Edit Basic Info</Link>
+              <Link href="/onboarding/child" style={{ color: 'var(--primary)', fontSize: '0.875rem' }}>Update Profile & Milestones</Link>
             </div>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0', borderTop: '1px solid var(--border)' }}>

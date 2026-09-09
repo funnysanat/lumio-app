@@ -20,6 +20,7 @@ export default async function DashboardPage() {
   let planMode = "creative";
   let errorMsg = null;
   let needsOnboarding = false;
+  let latestSnapshot = null;
   
   try {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -43,6 +44,20 @@ export default async function DashboardPage() {
   } catch (err) {
     console.error(err);
     errorMsg = "Could not connect to server.";
+  }
+
+  try {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const snapshotRes = await fetch(`${API_URL}/api/v1/onboarding/assessment`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      cache: 'no-store'
+    });
+    if (snapshotRes.ok) {
+      const data = await snapshotRes.json();
+      latestSnapshot = data.snapshot;
+    }
+  } catch (err) {
+    console.error("Could not fetch assessment", err);
   }
 
   if (needsOnboarding) {
@@ -78,7 +93,7 @@ export default async function DashboardPage() {
         </div>
       </header>
       
-      <main className="container animate-fade-in" style={{ paddingTop: '100px', maxWidth: '800px' }}>
+      <main className="page-wrapper container-lg animate-fade-in">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
           <div>
             <h1 style={{ margin: 0 }}>{greeting}, {firstName}!</h1>
@@ -100,22 +115,41 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Developmental Milestones Card */}
+        <div className="card" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ margin: '0 0 0.5rem 0' }}>Developmental Milestones (DEALL)</h3>
+            {latestSnapshot ? (
+              <p style={{ margin: 0, color: '#a1a1aa', fontSize: '0.875rem' }}>
+                Last assessed: {new Date(latestSnapshot.assessment_date).toLocaleDateString()} | Chronological Age: {latestSnapshot.chronological_age_months} months
+              </p>
+            ) : (
+              <p style={{ margin: 0, color: '#a1a1aa', fontSize: '0.875rem' }}>
+                Take the milestone check-in to get highly targeted micro-niche activities.
+              </p>
+            )}
+          </div>
+          <Link href="/onboarding/child" className="btn" style={{ backgroundColor: 'var(--primary)', color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem', textDecoration: 'none' }}>
+            {latestSnapshot ? 'Update Check-In' : 'Take Check-In'}
+          </Link>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
           {dailyPlan.map((activity: any, idx: number) => (
-            <div key={activity.id} className="activity-card">
-              <div>
+            <div key={activity.id} className="activity-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{ flexGrow: 1 }}>
                 <span className="badge">{activity.goal}</span>
-                <h2 style={{ margin: '0.25rem 0', fontSize: '1.25rem' }}>{activity.title}</h2>
-                <div style={{ display: 'flex', gap: '1rem', color: '#a1a1aa', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+                <h2 style={{ margin: '0.5rem 0', fontSize: '1.25rem', lineHeight: '1.4' }}>{activity.title}</h2>
+                <div style={{ display: 'flex', gap: '1rem', color: '#a1a1aa', fontSize: '0.875rem', marginBottom: '1rem' }}>
                   <span>⏱ {activity.duration}</span>
                   <span>📊 {activity.difficulty}</span>
                 </div>
-                <p style={{ margin: 0, fontSize: '0.875rem', color: '#d8b4fe', fontStyle: 'italic' }}>
+                <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b', fontStyle: 'italic', lineHeight: '1.5', marginBottom: '1.5rem' }}>
                   ✨ {activity.reason}
                 </p>
               </div>
-              <div>
-                <Link href={`/session/${activity.id}`} className="btn btn-primary">
+              <div style={{ width: '100%', marginTop: 'auto' }}>
+                <Link href={`/session/${activity.id}`} className="btn btn-primary" style={{ width: '100%' }}>
                   {idx === 0 ? t.startNow : t.start}
                 </Link>
               </div>
@@ -123,7 +157,7 @@ export default async function DashboardPage() {
           ))}
           
           {!errorMsg && dailyPlan.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#a1a1aa' }}>
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: '#a1a1aa' }}>
               <p>Your plan is being generated. Please refresh in a moment.</p>
             </div>
           )}

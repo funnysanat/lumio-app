@@ -33,11 +33,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
-  // Prevent hydration mismatch by rendering a generic wrapper until mounted
-  if (!mounted) {
-    return <div style={{ visibility: 'hidden' }}>{children}</div>;
-  }
-
+  // Render provider immediately to prevent hydration structural mismatch
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}

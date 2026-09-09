@@ -1,14 +1,40 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 
 export default function GoalsPage() {
   const router = useRouter();
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [initialGoals, setInitialGoals] = useState<string[]>(['', '', '']);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const token = await getToken();
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${API_URL}/api/v1/onboarding/goals`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.goals && data.goals.length > 0) {
+            setInitialGoals([
+              data.goals[0] || '',
+              data.goals[1] || '',
+              data.goals[2] || ''
+            ]);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadData();
+  }, [getToken]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,40 +73,91 @@ export default function GoalsPage() {
   }
 
   return (
-    <div className="container animate-fade-in" style={{ paddingTop: '100px', maxWidth: '600px' }}>
+    <div>
+      <header className="header">
+        <Link href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
+            <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
+            <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
+          </svg>
+          Lumio AI
+        </Link>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <Link href="/dashboard" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Dashboard</Link>
+          <UserButton />
+        </div>
+      </header>
+
+      <div className="page-wrapper container-sm animate-fade-in">
       <div className="card">
         <h1 style={{ marginBottom: '0.5rem' }}>Therapist Goals</h1>
-        <p style={{ color: '#a1a1aa', marginBottom: '2rem' }}>What is your child currently working on? (You can add up to 3 for now)</p>
+        <p style={{ color: '#a1a1aa', marginBottom: '1rem' }}>If your child is currently seeing a therapist (e.g., Speech, Occupational, ABA), what are their primary goals? <br/><strong>This is completely optional.</strong></p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Goal 1</label>
-            <input name="goal1" type="text" className="form-input" placeholder="e.g. Practice saying 2-word sentences" required />
+            <select name="goal1" className="form-select" defaultValue={initialGoals[0]} key={initialGoals[0]}>
+              <option value="">Select a goal...</option>
+              <option value="Improve expressive language (speaking & vocabulary)">Improve expressive language (speaking & vocabulary)</option>
+              <option value="Improve receptive language (understanding instructions)">Improve receptive language (understanding instructions)</option>
+              <option value="Develop fine motor skills (grasping, writing)">Develop fine motor skills (grasping, writing)</option>
+              <option value="Develop gross motor skills (walking, balance)">Develop gross motor skills (walking, balance)</option>
+              <option value="Improve social skills (joint attention, play)">Improve social skills (joint attention, play)</option>
+              <option value="Increase attention span">Increase attention span</option>
+              <option value="Reduce challenging behaviors">Reduce challenging behaviors</option>
+              <option value="Improve self-care (dressing, feeding)">Improve self-care (dressing, feeding)</option>
+            </select>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Goal 2 (Optional)</label>
-            <input name="goal2" type="text" className="form-input" placeholder="e.g. Pointing to items they want" />
+            <label className="form-label">Goal 2</label>
+            <select name="goal2" className="form-select" defaultValue={initialGoals[1]} key={initialGoals[1]}>
+              <option value="">Select a goal...</option>
+              <option value="Improve expressive language (speaking & vocabulary)">Improve expressive language (speaking & vocabulary)</option>
+              <option value="Improve receptive language (understanding instructions)">Improve receptive language (understanding instructions)</option>
+              <option value="Develop fine motor skills (grasping, writing)">Develop fine motor skills (grasping, writing)</option>
+              <option value="Develop gross motor skills (walking, balance)">Develop gross motor skills (walking, balance)</option>
+              <option value="Improve social skills (joint attention, play)">Improve social skills (joint attention, play)</option>
+              <option value="Increase attention span">Increase attention span</option>
+              <option value="Reduce challenging behaviors">Reduce challenging behaviors</option>
+              <option value="Improve self-care (dressing, feeding)">Improve self-care (dressing, feeding)</option>
+            </select>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Goal 3 (Optional)</label>
-            <input name="goal3" type="text" className="form-input" placeholder="" />
+            <label className="form-label">Goal 3</label>
+            <select name="goal3" className="form-select" defaultValue={initialGoals[2]} key={initialGoals[2]}>
+              <option value="">Select a goal...</option>
+              <option value="Improve expressive language (speaking & vocabulary)">Improve expressive language (speaking & vocabulary)</option>
+              <option value="Improve receptive language (understanding instructions)">Improve receptive language (understanding instructions)</option>
+              <option value="Develop fine motor skills (grasping, writing)">Develop fine motor skills (grasping, writing)</option>
+              <option value="Develop gross motor skills (walking, balance)">Develop gross motor skills (walking, balance)</option>
+              <option value="Improve social skills (joint attention, play)">Improve social skills (joint attention, play)</option>
+              <option value="Increase attention span">Increase attention span</option>
+              <option value="Reduce challenging behaviors">Reduce challenging behaviors</option>
+              <option value="Improve self-care (dressing, feeding)">Improve self-care (dressing, feeding)</option>
+            </select>
           </div>
 
-          <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(139, 92, 246, 0.1)', borderRadius: '0.5rem', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
-            <p style={{ fontSize: '0.875rem', margin: 0, color: '#d8b4fe' }}>
-              💡 <strong>Tip:</strong> Keep goals simple. Our AI will automatically adapt them into fun activities.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', alignItems: 'center' }}>
             <Link href="/onboarding/child" className="btn btn-outline">Back</Link>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Saving...' : 'Next Step: Interests'}
-            </button>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                type="button" 
+                className="btn" 
+                onClick={() => router.push('/onboarding/interests')}
+                style={{ backgroundColor: 'transparent', color: '#a1a1aa' }}
+              >
+                Skip
+              </button>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Saving...' : 'Next Step: Interests'}
+              </button>
+            </div>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
