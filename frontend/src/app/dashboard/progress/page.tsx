@@ -13,8 +13,10 @@ export default function ProgressPage() {
   
   const { child, history: cachedHistory, setHistory, setChild } = useAppStore();
   const [loading, setLoading] = useState(cachedHistory.length === 0);
+  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
+    setHasMounted(true);
     async function fetchData() {
       if (!userId) return;
       try {
@@ -58,6 +60,8 @@ export default function ProgressPage() {
   }, [getToken, userId, setChild, setHistory]);
 
   const childName = child?.first_name || "Your Child";
+
+  if (!hasMounted) return null;
 
   return (
     <div>

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { UserButton, useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import GeneratePlanButton from '@/components/GeneratePlanButton';
 import { UI_STRINGS } from '@/utils/i18n';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -19,8 +18,10 @@ export default function DashboardPage() {
   
   const [loading, setLoading] = useState(!cachedPlan);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
+    setHasMounted(true);
     if (userId === null) {
       router.push("/sign-in");
       return;
@@ -92,6 +93,8 @@ export default function DashboardPage() {
   let greeting = "Good Morning";
   if (hour >= 12 && hour < 17) greeting = "Good Afternoon";
   else if (hour >= 17) greeting = "Good Evening";
+
+  if (!hasMounted) return null;
 
   return (
     <div>
@@ -184,22 +187,6 @@ export default function DashboardPage() {
             )}
           </div>
         )}
-
-        <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem', color: 'var(--foreground)' }}>Generate a new plan</h3>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <GeneratePlanButton 
-              mode="standard" 
-              buttonText="🏥 Standard Therapy Activities" 
-              designingText="Loading Standard Plan..." 
-            />
-            <GeneratePlanButton 
-              mode="creative" 
-              buttonText="✨ Creative AI Activities" 
-              designingText="Designing Creative Plan..." 
-            />
-          </div>
-        </div>
       </main>
     </div>
   );

@@ -3,7 +3,9 @@ from app.ai.agent import plan_agent
 from app.db.session import async_session_maker
 from app.models.child import ChildProfile, TherapyGoal, InterestProfile, DevelopmentalSnapshot
 from app.models.activity import DailyPlan
+from app.models.user import User
 from langchain_core.messages import HumanMessage
+import resend
 import asyncio
 from sqlalchemy.future import select
 import os
@@ -99,6 +101,12 @@ async def _generate_and_save_plan(user_id: str, mode: str):
         db.add(plan)
         await db.commit()
         
+        # Trigger email notification
+        user_res = await db.execute(select(User).filter(User.id == user_id))
+        user = user_res.scalars().first()
+        if user and user.email:
+            send_daily_notification_email.delay(user.email, child.first_name or "your child")
+            
         return {"status": "completed", "plan_id": plan.id}
 
 @celery_app.task(name="generate_plan")
@@ -111,3 +119,40 @@ def generate_plan_task(user_id: str, mode: str = "creative"):
         asyncio.set_event_loop(loop)
         
     return loop.run_until_complete(_generate_and_save_plan(user_id, mode))
+
+@celery_app.task(name="send_daily_notification_email")
+def send_daily_notification_email(email: str, child_name: str):
+    print(f"Sending daily notification to {email} for {child_name}")
+    api_key = os.getenv("RESEND_API_KEY")
+    if not api_key:
+        print("RESEND_API_KEY not found. Skipping email notification.")
+        return
+        
+    resend.api_key = api_key
+    try:
+        r = resend.Emails.send({
+            "from": "Lumio AI <onboarding@resend.dev>",
+            "to": [email],
+            "subject": f"Your daily plan for {child_name} is ready! ✨",
+            "html": f"<p>Good morning!</p><p>Your child's personalized Lumio AI therapy plan is ready for today.</p><p><a href='http://localhost:3000/dashboard'>Click here to view it and start your activities!</a></p>"
+        })
+        print(f"Email sent successfully: {r}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+async def _generate_for_all():
+    async with async_session_maker() as db:
+        users_res = await db.execute(select(User))
+        users = users_res.scalars().all()
+        for u in users:
+            generate_plan_task.delay(u.id, "creative")
+
+@celery_app.task(name="generate_daily_plans_for_all_users")
+def generate_daily_plans_for_all_users():
+    print("Triggering daily plan generation for all users...")
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(_generate_for_all())
