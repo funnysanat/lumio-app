@@ -1,79 +1,100 @@
-import { UserButton } from "@clerk/nextjs";
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import GeneratePlanButton from '@/components/GeneratePlanButton';
-import { UI_STRINGS } from '@/utils/i18n';
+"use client";
 
-export default async function DashboardPage() {
-  const { userId, getToken } = await auth();
-  const user = await currentUser();
+import { useEffect, useState } from "react";
+import { UserButton, useAuth, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { UI_STRINGS } from '@/utils/i18n';
+import { useAppStore } from '@/store/useAppStore';
+
+export default function DashboardPage() {
+  const { userId, getToken } = useAuth();
+  const { user } = useUser();
+  const router = useRouter();
+  
   const firstName = user?.firstName || "Parent";
 
-  if (!userId) {
-    redirect("/sign-in");
-  }
-
-  const token = await getToken();
+  const { plan: cachedPlan, snapshot: cachedSnapshot, setPlan, setSnapshot } = useAppStore();
   
-  let dailyPlan = [];
-  let planMode = "creative";
-  let errorMsg = null;
-  let needsOnboarding = false;
-  let latestSnapshot = null;
-  
-  try {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const res = await fetch(`${API_URL}/api/v1/dashboard/plan`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      cache: 'no-store' // Always fetch fresh plan
-    });
-    
-    if (res.ok) {
-      const data = await res.json();
-      dailyPlan = data.activities || [];
-      planMode = data.mode || "creative";
-    } else if (res.status === 404) {
-      // Child profile not found, needs onboarding
-      needsOnboarding = true;
-    } else {
-      errorMsg = "Failed to load your daily plan.";
+  const [loading, setLoading] = useState(!cachedPlan);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+    if (userId === null) {
+      router.push("/sign-in");
+      return;
     }
-  } catch (err) {
-    console.error(err);
-    errorMsg = "Could not connect to server.";
-  }
 
-  try {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const snapshotRes = await fetch(`${API_URL}/api/v1/onboarding/assessment`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      cache: 'no-store'
-    });
-    if (snapshotRes.ok) {
-      const data = await snapshotRes.json();
-      latestSnapshot = data.snapshot;
+    async function loadData() {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        
+        // Fetch Plan
+        try {
+          const res = await fetch(`${API_URL}/api/v1/dashboard/plan`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            cache: 'no-store'
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            setPlan({
+              id: 'daily',
+              mode: data.mode || "creative",
+              plan_date: new Date().toISOString(),
+              activities: data.activities || []
+            });
+          } else if (res.status === 404) {
+            router.push("/onboarding");
+          } else {
+            // Only set error if we don't have a cached plan
+            if (!cachedPlan) setErrorMsg("Failed to load your daily plan.");
+          }
+        } catch (err) {
+          console.error(err);
+          if (!cachedPlan) setErrorMsg("Could not connect to server. Working offline.");
+        }
+
+        // Fetch Snapshot
+        try {
+          const snapshotRes = await fetch(`${API_URL}/api/v1/onboarding/assessment`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            cache: 'no-store'
+          });
+          if (snapshotRes.ok) {
+            const data = await snapshotRes.json();
+            if (data.snapshot) setSnapshot(data.snapshot);
+          }
+        } catch (err) {
+          console.error("Could not fetch assessment", err);
+        }
+
+      } finally {
+        setLoading(false);
+      }
     }
-  } catch (err) {
-    console.error("Could not fetch assessment", err);
-  }
 
-  if (needsOnboarding) {
-    redirect("/onboarding");
-  }
+    if (userId) loadData();
+  }, [userId, getToken, router, setPlan, setSnapshot, cachedPlan]);
 
-  const langCode = (dailyPlan.length > 0 ? dailyPlan[0].audio_lang_code : 'en-US')?.split('-')[0] || 'en';
+  const dailyPlan = cachedPlan?.activities || [];
+  const planMode = cachedPlan?.mode || "creative";
+  const latestSnapshot = cachedSnapshot;
+
+  const langCode = (dailyPlan.length > 0 ? dailyPlan[0].category : 'en-US')?.split('-')[0] || 'en';
   const t = UI_STRINGS[langCode] || UI_STRINGS['en'];
 
   const hour = new Date().getHours();
   let greeting = "Good Morning";
-  if (hour >= 12 && hour < 17) {
-    greeting = "Good Afternoon";
-  } else if (hour >= 17) {
-    greeting = "Good Evening";
-  }
+  if (hour >= 12 && hour < 17) greeting = "Good Afternoon";
+  else if (hour >= 17) greeting = "Good Evening";
+
+  if (!hasMounted) return null;
 
   return (
     <div>
@@ -134,50 +155,38 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-          {dailyPlan.map((activity: any, idx: number) => (
-            <div key={activity.id} className="activity-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <div style={{ flexGrow: 1 }}>
-                <span className="badge">{activity.goal}</span>
-                <h2 style={{ margin: '0.5rem 0', fontSize: '1.25rem', lineHeight: '1.4' }}>{activity.title}</h2>
-                <div style={{ display: 'flex', gap: '1rem', color: '#a1a1aa', fontSize: '0.875rem', marginBottom: '1rem' }}>
-                  <span>⏱ {activity.duration}</span>
-                  <span>📊 {activity.difficulty}</span>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#a1a1aa' }}>Loading your plan...</div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {dailyPlan.map((activity: any, idx: number) => (
+              <div key={activity.id} className="activity-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <div style={{ flexGrow: 1 }}>
+                  <span className="badge">{activity.goal}</span>
+                  <h2 style={{ margin: '0.5rem 0', fontSize: '1.25rem', lineHeight: '1.4' }}>{activity.title}</h2>
+                  <div style={{ display: 'flex', gap: '1rem', color: '#a1a1aa', fontSize: '0.875rem', marginBottom: '1rem' }}>
+                    <span>⏱ {activity.duration}</span>
+                    <span>📊 {activity.difficulty}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b', fontStyle: 'italic', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+                    ✨ {activity.reason}
+                  </p>
                 </div>
-                <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b', fontStyle: 'italic', lineHeight: '1.5', marginBottom: '1.5rem' }}>
-                  ✨ {activity.reason}
-                </p>
+                <div style={{ width: '100%', marginTop: 'auto' }}>
+                  <Link href={`/session/${activity.id}`} className="btn btn-primary" style={{ width: '100%' }}>
+                    {idx === 0 ? t.startNow : t.start}
+                  </Link>
+                </div>
               </div>
-              <div style={{ width: '100%', marginTop: 'auto' }}>
-                <Link href={`/session/${activity.id}`} className="btn btn-primary" style={{ width: '100%' }}>
-                  {idx === 0 ? t.startNow : t.start}
-                </Link>
+            ))}
+            
+            {!errorMsg && dailyPlan.length === 0 && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: '#a1a1aa' }}>
+                <p>Your plan is being generated. Please refresh in a moment.</p>
               </div>
-            </div>
-          ))}
-          
-          {!errorMsg && dailyPlan.length === 0 && (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: '#a1a1aa' }}>
-              <p>Your plan is being generated. Please refresh in a moment.</p>
-            </div>
-          )}
-        </div>
-
-        <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '1.125rem', marginBottom: '1rem', color: 'var(--foreground)' }}>Generate a new plan</h3>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <GeneratePlanButton 
-              mode="standard" 
-              buttonText="🏥 Standard Therapy Activities" 
-              designingText="Loading Standard Plan..." 
-            />
-            <GeneratePlanButton 
-              mode="creative" 
-              buttonText="✨ Creative AI Activities" 
-              designingText="Designing Creative Plan..." 
-            />
+            )}
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

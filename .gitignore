@@ -36,4 +36,5 @@ __pycache__/
 *.csv
 backend/data/
 activity_repository/
+all_docs/
 .gemini/

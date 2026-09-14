@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useAppStore } from '@/store/useAppStore';
 
 type SnapshotData = {
   assessment_date: string;
@@ -12,8 +13,8 @@ type SnapshotData = {
 
 export default function VisualRoadmap() {
   const { getToken } = useAuth();
-  const [snapshot, setSnapshot] = useState<SnapshotData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { snapshot: cachedSnapshot, setSnapshot } = useAppStore();
+  const [loading, setLoading] = useState(!cachedSnapshot);
 
   useEffect(() => {
     async function fetchAssessment() {
@@ -26,7 +27,7 @@ export default function VisualRoadmap() {
         
         if (res.ok) {
           const data = await res.json();
-          setSnapshot(data.snapshot);
+          if (data.snapshot) setSnapshot(data.snapshot);
         }
       } catch (err) {
         console.error("Failed to fetch assessment", err);
@@ -35,9 +36,9 @@ export default function VisualRoadmap() {
       }
     }
     fetchAssessment();
-  }, [getToken]);
+  }, [getToken, setSnapshot]);
 
-  if (loading) {
+  if (loading && !cachedSnapshot) {
     return (
       <div className="card" style={{ padding: '2rem', textAlign: 'center', color: '#a1a1aa' }}>
         Loading your child's roadmap...
@@ -45,7 +46,7 @@ export default function VisualRoadmap() {
     );
   }
 
-  if (!snapshot || !snapshot.domain_scores || Object.keys(snapshot.domain_scores).length === 0) {
+  if (!cachedSnapshot || !cachedSnapshot.domain_scores || Object.keys(cachedSnapshot.domain_scores).length === 0) {
     return null;
   }
 
@@ -66,10 +67,10 @@ export default function VisualRoadmap() {
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        {Object.entries(snapshot.domain_scores)
+        {Object.entries(cachedSnapshot.domain_scores)
           .filter(([key]) => key !== "_checked_ids") // Filter out raw DB data
           .map(([domain, currentLevel], index) => {
-            const nextMilestonesList = snapshot.next_milestones[domain] || [];
+            const nextMilestonesList = cachedSnapshot.next_milestones[domain] || [];
             const color = colors[index % colors.length];
             
             // Calculate a rough progress percentage just for visual bar representation

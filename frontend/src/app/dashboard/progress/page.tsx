@@ -1,59 +1,67 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import SessionHistory from "./SessionHistory";
 import VisualRoadmap from "./VisualRoadmap";
 import JourneyRoadmap from "./JourneyRoadmap";
+import { useAppStore } from "@/store/useAppStore";
 
-
-type SessionInfo = {
-  id: string;
-  activity_name: string;
-  response: string;
-  text_note: string | null;
-  voice_note_url: string | null;
-  time: string;
-};
-
-type HistoryData = {
-  date: string;
-  sessions: SessionInfo[];
-  total_completed: number;
-  independent_count: number;
-};
-
-export default async function ProgressPage() {
-  const { getToken } = await auth();
-  const token = await getToken();
+export default function ProgressPage() {
+  const { getToken, userId } = useAuth();
   
-  let childName = "Your Child";
-  let history: HistoryData[] = [];
-  
-  try {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    
-    // Fetch child profile
-    const childRes = await fetch(`${API_URL}/api/v1/onboarding/child`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      cache: 'no-store'
-    });
-    if (childRes.ok) {
-      const data = await childRes.json();
-      childName = data.child?.first_name || childName;
+  const { child, history: cachedHistory, setHistory, setChild } = useAppStore();
+  const [loading, setLoading] = useState(cachedHistory.length === 0);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+    async function fetchData() {
+      if (!userId) return;
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        
+        // Fetch child profile
+        try {
+          const childRes = await fetch(`${API_URL}/api/v1/onboarding/child`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            cache: 'no-store'
+          });
+          if (childRes.ok) {
+            const data = await childRes.json();
+            if (data.child) setChild(data.child);
+          }
+        } catch (err) {
+          console.error("Failed to fetch child", err);
+        }
+
+        // Fetch session history
+        try {
+          const historyRes = await fetch(`${API_URL}/api/v1/dashboard/progress/history`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            cache: 'no-store'
+          });
+          if (historyRes.ok) {
+            const historyData = await historyRes.json();
+            if (historyData.history) setHistory(historyData.history);
+          }
+        } catch (err) {
+          console.error("Failed to fetch history", err);
+        }
+      } finally {
+        setLoading(false);
+      }
     }
 
-    // Fetch session history
-    const historyRes = await fetch(`${API_URL}/api/v1/dashboard/progress/history`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      cache: 'no-store'
-    });
-    if (historyRes.ok) {
-      const historyData = await historyRes.json();
-      history = historyData.history || [];
-    }
-  } catch (err) {
-    console.error(err);
-  }
+    fetchData();
+  }, [getToken, userId, setChild, setHistory]);
+
+  const childName = child?.first_name || "Your Child";
+
+  if (!hasMounted) return null;
 
   return (
     <div>
@@ -92,7 +100,7 @@ export default async function ProgressPage() {
 
         <section style={{ marginBottom: '3rem' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Session History</h2>
-          <SessionHistory history={history} />
+          <SessionHistory history={cachedHistory} />
         </section>
 
       </main>
