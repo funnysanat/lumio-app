@@ -21,6 +21,7 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [engagementMode, setEngagementMode] = useState<'game' | 'music'>('game');
   const [showQR, setShowQR] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   // WebSocket Connection
   useEffect(() => {
@@ -252,25 +253,42 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
       window.speechSynthesis.speak(utterance);
     };
 
-    const videoUrl = activity.video_search_query 
-      ? `https://www.youtube.com/results?search_query=${encodeURIComponent(activity.video_search_query)}`
-      : `https://www.youtube.com/results?search_query=${encodeURIComponent(activity.title + " " + activity.goal)}`;
+    const getShortGoal = (goal: string) => {
+      if (!goal) return "this skill";
+      let short = goal.split(' (')[0].split(',')[0].split('&')[0].trim();
+      return short.length > 30 ? short.substring(0, 30) + '...' : short;
+    };
 
     return (
-      <div className="container animate-fade-in" style={{ paddingTop: '100px', maxWidth: '600px', textAlign: 'center' }}>
+      <div className="page-wrapper container-md animate-fade-in" style={{ textAlign: 'center' }}>
         <h1>{activity.title}</h1>
         <p style={{ color: '#a1a1aa', fontSize: '1.25rem', marginBottom: '2rem' }}>
           Goal: {activity.goal}
         </p>
+        
+        {showVideo && (
+          <div className="animate-fade-in" style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', maxWidth: '100%', backgroundColor: '#000', borderRadius: '0.5rem', marginBottom: '2rem' }}>
+            <iframe 
+              src={activity.youtube_video_id 
+                ? `https://www.youtube.com/embed/${activity.youtube_video_id}?autoplay=1` 
+                : `https://www.youtube.com/embed/videoseries?listType=search&list=${encodeURIComponent(activity.goal)}&autoplay=1`
+              }
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        )}
         
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '2rem' }}>
           <button onClick={handlePlayAudio} className="btn" style={{ backgroundColor: isAudioPlaying ? '#ef4444' : '#8b5cf6', color: 'white', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span>{isAudioPlaying ? '⏸' : '🔊'}</span> {isAudioPlaying ? 'Stop Audio' : t.listen}
           </button>
           
-          <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="btn" style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '0.5rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>🎥</span> {t.watch}
-          </a>
+          <button onClick={() => setShowVideo(!showVideo)} className="btn" style={{ backgroundColor: '#ef4444', color: 'white', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>🎥</span> {showVideo ? 'Hide Video' : `Watch video on ${getShortGoal(activity.goal)}`}
+          </button>
         </div>
 
         <div className="card" style={{ textAlign: 'left', marginBottom: '2rem' }}>

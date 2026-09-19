@@ -30,3 +30,11 @@ __pycache__/
 *.md
 !frontend/**/*.md
 !backend/**/*.md
+
+# Data, references, and Proprietary AI / RAG Data
+*.pdf
+*.csv
+backend/data/
+activity_repository/
+all_docs/
+.gemini/

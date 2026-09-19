@@ -60,3 +60,25 @@ async def clerk_webhooks(request: Request, db: AsyncSession = Depends(get_db)):
             await db.commit()
             
     return {"success": True}
+
+@router.post("/daily")
+async def daily_webhooks(request: Request, db: AsyncSession = Depends(get_db)):
+    """Receives events from Daily.co, like recording completions."""
+    payload = await request.json()
+    
+    # In a real scenario, we'd verify the X-Webhook-Signature header here using DAILY_WEBHOOK_SECRET
+    
+    event_type = payload.get("type")
+    
+    if event_type == "recording.ready-to-download":
+        room_name = payload.get("room_name")
+        recording_id = payload.get("recording_id")
+        
+        # The room name was generated as `mock-room-{booking_id}` or `lumio-{booking_id}`
+        # Let's extract booking_id
+        booking_id = room_name.replace("mock-room-", "").replace("lumio-", "")
+        
+        from app.worker.tasks import generate_session_summary
+        generate_session_summary.delay(booking_id, recording_id)
+        
+    return {"success": True}

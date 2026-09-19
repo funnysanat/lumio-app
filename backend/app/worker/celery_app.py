@@ -12,6 +12,16 @@ celery_app.conf.task_routes = {
     "app.worker.tasks.*": "main-queue"
 }
 
+from celery.schedules import crontab
+
+celery_app.conf.beat_schedule = {
+    "generate-daily-plans": {
+        "task": "generate_daily_plans_for_all_users",
+        # Run every day at 6:00 AM UTC
+        "schedule": crontab(hour=6, minute=0),
+    },
+}
+
 celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],

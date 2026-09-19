@@ -75,11 +75,31 @@ a {
 }
 
 /* Utility Classes */
+.page-wrapper {
+  padding-top: 120px;
+  padding-bottom: 40px;
+  min-height: 100vh;
+}
+@media (min-width: 768px) {
+  .page-wrapper { padding-top: 140px; }
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
+@media (min-width: 768px) {
+  .container { 
+    padding-left: 2rem; 
+    padding-right: 2rem; 
+  }
+}
+
+.container-sm { max-width: 600px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; }
+.container-md { max-width: 800px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; }
+.container-lg { max-width: 1200px; margin: 0 auto; padding-left: 1.5rem; padding-right: 1.5rem; }
 
 .btn {
   display: inline-flex;
