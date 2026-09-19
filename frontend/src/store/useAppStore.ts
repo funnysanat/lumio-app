@@ -38,6 +38,8 @@ export type SessionInfo = {
   activity_name: string;
   response: string;
   time: string;
+  text_note: string | null;
+  voice_note_url: string | null;
 };
 
 export type HistoryData = {

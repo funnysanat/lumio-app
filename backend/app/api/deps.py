@@ -16,6 +16,9 @@ async def get_current_user(
     payload = await verify_token(token)
     
     user_id = payload.get("sub")
+    print(f"VERIFY_TOKEN PAYLOAD: {payload}")
+    print(f"EXTRACTED USER ID: {user_id}")
+    
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
@@ -27,7 +30,8 @@ async def get_current_user(
     
     if not user:
         # If user is not found (webhook delayed), create a placeholder
-        user = User(id=user_id, email=payload.get("email", "unknown@example.com"))
+        # Use user_id in the email to avoid unique constraint violations if email is missing from JWT
+        user = User(id=user_id, email=payload.get("email", f"{user_id}@placeholder.com"))
         db.add(user)
         await db.commit()
         await db.refresh(user)
