@@ -97,7 +97,10 @@ async def create_child_profile(
             preferred_language=data.preferred_language
         )
         db.add(child)
-        await db.flush() # flush to get child.id
+        
+    current_user.role = "parent"
+    db.add(current_user)
+    await db.flush() # flush to get child.id
         
     # Calculate Developmental Snapshot
     domain_scores = {}

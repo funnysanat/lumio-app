@@ -5,8 +5,13 @@ import httpx
 from typing import Dict, Any
 
 async def verify_token(token: str) -> Dict[str, Any]:
+    print(f"VERIFY_TOKEN CALLED!")
+    print(f"TOKEN: {token[:20]}...")
+    print(f"CLERK_SECRET_KEY is: {settings.CLERK_SECRET_KEY}")
+    
     # Mock token for local development without actual Clerk integration
     if token == "mock_token" or settings.CLERK_SECRET_KEY == "sk_test_mock":
+        print("USING MOCK TOKEN!")
         return {"sub": "user_mock123", "roles": ["parent"]}
         
     try:

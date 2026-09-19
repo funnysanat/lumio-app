@@ -28,6 +28,7 @@ export default function JourneyRoadmap() {
   
   const { snapshot: cachedSnapshot, child, setSnapshot, setChild } = useAppStore();
   const [loading, setLoading] = useState(!cachedSnapshot);
+  const [therapySessions, setTherapySessions] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -61,6 +62,22 @@ export default function JourneyRoadmap() {
           } catch(e) {
             console.error(e);
           }
+        }
+
+        // Fetch History for therapy sessions
+        try {
+          const resHistory = await fetch(`${API_URL}/api/v1/dashboard/progress/history`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (resHistory.ok) {
+            const data = await resHistory.json();
+            if (data.history) {
+              const ts = data.history.flatMap((day: any) => day.therapy_sessions || []);
+              setTherapySessions(ts);
+            }
+          }
+        } catch(e) {
+          console.error(e);
         }
 
       } catch (err) {
@@ -183,7 +200,9 @@ export default function JourneyRoadmap() {
                   top: '50%',
                   transform: 'translateY(-50%)',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
+                  gap: '0.5rem',
                   animation: 'pulse 2s infinite'
                 }}>
                   <div style={{
@@ -191,9 +210,26 @@ export default function JourneyRoadmap() {
                     borderRadius: '50%', border: '3px solid #ec4899',
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     boxShadow: '0 0 15px rgba(236, 72, 153, 0.5)',
-                    fontSize: '1.5rem'
+                    fontSize: '1.5rem',
+                    position: 'relative'
                   }}>
                     {pointerEmoji}
+                    {therapySessions.length > 0 && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '-10px',
+                        right: '-10px',
+                        background: '#38bdf8',
+                        color: 'white',
+                        fontSize: '0.7rem',
+                        padding: '2px 6px',
+                        borderRadius: '10px',
+                        border: '2px solid white',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}>
+                        🩺 {therapySessions.length}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
