@@ -338,3 +338,41 @@ a {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
 }
+
+@media print {
+  /* Hide elements that shouldn't be printed */
+  .no-print,
+  nav,
+  header,
+  .sidebar,
+  button {
+    display: none !important;
+  }
+  
+  /* Ensure main content is visible and takes full width */
+  body, html {
+    background: white !important;
+    color: black !important;
+  }
+  
+  main, .print-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Prevent awkward page breaks */
+  .break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  /* Strip background colors from cards to save ink, or preserve essential ones */
+  .card, .activity-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    background-color: white !important;
+    color: black !important;
+  }
+}

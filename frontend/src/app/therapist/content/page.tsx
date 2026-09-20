@@ -24,6 +24,7 @@ export default function TherapistContentHub() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadDesc, setUploadDesc] = useState("");
+  const [uploadCategory, setUploadCategory] = useState("General Education");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -60,6 +61,7 @@ export default function TherapistContentHub() {
       const formData = new FormData();
       formData.append("title", uploadTitle);
       if (uploadDesc) formData.append("description", uploadDesc);
+      formData.append("category", uploadCategory);
       formData.append("video", file);
 
       const res = await fetch(`${API_URL}/api/v1/therapist/videos`, {
@@ -161,9 +163,18 @@ export default function TherapistContentHub() {
 
           <div className="card" style={{ padding: "1.5rem", position: "sticky", top: "2rem" }}>
             <h2 style={{ margin: "0 0 1rem 0", fontSize: "1.25rem", fontWeight: 700 }}>Upload New Video</h2>
-            <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", marginBottom: "1.5rem" }}>
-              Share educational content, therapy tips, or exercises to boost your visibility on the marketplace. Videos are verified by AI before being published to parents.
-            </p>
+            
+            <div style={{ background: "rgba(239, 68, 68, 0.1)", borderLeft: "4px solid #ef4444", padding: "1rem", borderRadius: "0 0.5rem 0.5rem 0", marginBottom: "1.5rem" }}>
+              <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "0.9rem", fontWeight: 700, color: "#ef4444" }}>Strict Content Guidelines</h3>
+              <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.8rem", color: "var(--foreground)", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                <li>No self-promotional content or spam</li>
+                <li>No sexual or inappropriate content</li>
+                <li>No religious content</li>
+                <li>No claims that medicines cure diseases or hoaxes</li>
+                <li><strong>Only purely educational therapy content is allowed</strong></li>
+              </ul>
+              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Videos are verified by AI. Violations will result in video removal.</p>
+            </div>
             
             <form onSubmit={handleUpload} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -176,6 +187,21 @@ export default function TherapistContentHub() {
                   style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", padding: "0.75rem", borderRadius: "0.5rem", color: "white" }}
                   placeholder="e.g., Speech Therapy Tip 1"
                 />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: 600 }}>Category</label>
+                <select 
+                  value={uploadCategory}
+                  onChange={e => setUploadCategory(e.target.value)}
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", padding: "0.75rem", borderRadius: "0.5rem", color: "white" }}
+                >
+                  <option value="Speech Therapy">Speech Therapy</option>
+                  <option value="Occupational Therapy">Occupational Therapy</option>
+                  <option value="Behavior Management">Behavior Management</option>
+                  <option value="Parent Coaching">Parent Coaching</option>
+                  <option value="General Education">General Education</option>
+                </select>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <label style={{ fontSize: "0.85rem", fontWeight: 600 }}>Description (Optional)</label>

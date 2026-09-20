@@ -17,7 +17,6 @@ async def log_session(
     activity_id: str = Form(...),
     response: str = Form(...),
     text_note: str = Form(None),
-    audio_file: UploadFile = File(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -27,21 +26,39 @@ async def log_session(
     if not child:
         raise HTTPException(status_code=404, detail="Child profile not found")
         
+    ai_summary = None
     voice_note_url = None
-    if audio_file:
-        content = await audio_file.read()
-        file_name = f"users/{current_user.id}/audio_{uuid.uuid4().hex[:8]}.webm"
-        voice_note_url = storage_service.upload_file(file_name, content, audio_file.content_type)
         
     session_log = ActivitySession(
         child_id=child.id,
         activity_id=activity_id,
         response=response,
         text_note=text_note,
-        voice_note_url=voice_note_url
+        voice_note_url=voice_note_url,
+        ai_summary=ai_summary
     )
     
     db.add(session_log)
     await db.commit()
     
     return {"status": "success", "voice_note_url": voice_note_url}
+
+@router.post("/upload-chat-file")
+async def upload_chat_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Uploads a file shared in a live session chat to GCP."""
+    from app.services.gcp_storage import upload_file_to_gcp
+    
+    file_bytes = await file.read()
+    file_ext = file.filename.split('.')[-1] if '.' in file.filename else ''
+    safe_name = f"chat_files/{current_user.id}_{uuid.uuid4().hex[:8]}.{file_ext}"
+    
+    try:
+        url = await upload_file_to_gcp(file_bytes, safe_name, content_type=file.content_type)
+        if not url:
+            raise HTTPException(status_code=500, detail="Failed to upload file")
+        return {"url": url, "filename": file.filename}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

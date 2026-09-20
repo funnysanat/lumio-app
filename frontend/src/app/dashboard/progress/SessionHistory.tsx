@@ -9,6 +9,7 @@ type SessionInfo = {
   response: string;
   text_note: string | null;
   voice_note_url: string | null;
+  ai_summary?: string | null;
   time: string;
 };
 
@@ -211,6 +212,15 @@ export default function SessionHistory({ history }: Props) {
                   {session.voice_note_url && (
                     <div style={{ marginTop: '0.5rem' }}>
                       <audio controls src={session.voice_note_url} style={{ height: '30px', width: '100%', maxWidth: '300px' }} />
+                    </div>
+                  )}
+
+                  {session.ai_summary && (
+                    <div style={{ marginTop: '1rem', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.75rem', borderRadius: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>✨ AI Progress Insight</span>
+                      <p style={{ fontSize: '0.85rem', color: '#e2e8f0', margin: 0, lineHeight: 1.4 }}>
+                        {session.ai_summary}
+                      </p>
                     </div>
                   )}
                 </div>

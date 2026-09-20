@@ -13,6 +13,7 @@ type Video = {
   views_count: number;
   likes_count: number;
   comments_count: number;
+  category?: string;
   created_at: string;
   therapist: {
     id: string;
@@ -25,6 +26,7 @@ export default function FeedPage() {
   const { getToken, userId } = useAuth();
   const router = useRouter();
   const [videos, setVideos] = useState<Video[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [loading, setLoading] = useState(true);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -78,6 +80,9 @@ export default function FeedPage() {
 
   if (loading) return <div style={{ padding: "4rem", textAlign: "center", color: "var(--muted-foreground)" }}>Loading Therapy Videos...</div>;
 
+  const categories = ["All", "Speech Therapy", "Occupational Therapy", "Behavior Management", "Parent Coaching", "General Education"];
+  const filteredVideos = selectedCategory === "All" ? videos : videos.filter(v => (v.category || "General Education") === selectedCategory);
+
   return (
     <div>
       <header className="header">
@@ -97,17 +102,41 @@ export default function FeedPage() {
 
       <main className="page-wrapper container-lg animate-fade-in" style={{ maxWidth: '600px' }}>
         <h1 style={{ margin: "0 0 0.5rem 0", fontSize: "1.75rem", fontWeight: 800 }}>Therapy Video Feed</h1>
-        <p style={{ color: "var(--muted-foreground)", marginBottom: "2rem" }}>
-          Discover tips, exercises, and insights from verified therapists.
+        <p style={{ color: "var(--muted-foreground)", marginBottom: "1.5rem" }}>
+          Short educational videos, exercises, and tips from verified therapists.
         </p>
 
+        {/* Category Filters */}
+        <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "1rem", marginBottom: "1rem", scrollbarWidth: "none" }} className="hide-scrollbar">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "2rem",
+                border: "none",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                background: selectedCategory === cat ? "var(--primary)" : "var(--card)",
+                color: selectedCategory === cat ? "white" : "var(--foreground)",
+                boxShadow: selectedCategory === cat ? "0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "none"
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-          {videos.length === 0 ? (
+          {filteredVideos.length === 0 ? (
             <div className="card" style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>
               No videos available right now.
             </div>
           ) : (
-            videos.map(v => (
+            filteredVideos.map(v => (
               <div key={v.id} className="card" style={{ overflow: "hidden" }}>
                 <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid var(--border)" }}>
                   <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "var(--muted)", overflow: "hidden" }}>
@@ -151,7 +180,12 @@ export default function FeedPage() {
                     </div>
                   </div>
                   
-                  <h3 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem" }}>{v.title}</h3>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.1rem" }}>{v.title}</h3>
+                    <span style={{ fontSize: "0.7rem", background: "var(--primary)", color: "white", padding: "0.2rem 0.5rem", borderRadius: "1rem", fontWeight: 600, whiteSpace: "nowrap" }}>
+                      {v.category || "General"}
+                    </span>
+                  </div>
                   {v.description && (
                     <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
                       {v.description}

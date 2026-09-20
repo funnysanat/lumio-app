@@ -206,8 +206,14 @@ async def get_my_bookings(
         .where(TherapistBooking.therapist_id == profile.id)
         .order_by(TherapistBooking.created_at.desc())
     )
-    return bookings_result.scalars().all()
-
+    bookings = bookings_result.scalars().all()
+    for b in bookings:
+        if b.status not in ("confirmed", "completed"):
+            b.parent_email = "Hidden until confirmed"
+            if getattr(b, 'parent_phone', None):
+                b.parent_phone = "Hidden until confirmed"
+    
+    return bookings
 
 @router.patch("/bookings/{booking_id}", response_model=BookingResponse)
 async def update_booking_status(
@@ -256,11 +262,10 @@ async def update_booking_status(
 async def submit_session_summary(
     booking_id: str,
     notes: Optional[str] = Form(None),
-    audio: Optional[UploadFile] = File(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Therapist submits post-session text notes and/or audio summary."""
+    """Therapist submits post-session text notes."""
     result = await db.execute(
         select(TherapistProfile).where(TherapistProfile.user_id == current_user.id)
     )
@@ -284,44 +289,6 @@ async def submit_session_summary(
             booking.therapist_notes += f"\n\nPost-Session: {notes}"
         else:
             booking.therapist_notes = notes
-
-    if audio:
-        # Upload to GCP
-        from app.services.gcp_storage import upload_file_to_gcp
-        file_bytes = await audio.read()
-        audio_url = await upload_file_to_gcp(
-            file_bytes, 
-            f"audio_summaries/{booking.id}_{audio.filename}",
-            content_type=audio.content_type
-        )
-        booking.therapist_audio_url = audio_url
-
-        # Transcribe using Gemini 2.5 Flash
-        try:
-            import google.generativeai as genai
-            import tempfile
-            import os
-            
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            
-            # API needs a local file
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
-                temp_file.write(file_bytes)
-                temp_file_path = temp_file.name
-                
-            uploaded_audio = genai.upload_file(path=temp_file_path)
-            model = genai.GenerativeModel("gemini-2.5-flash")
-            response = model.generate_content([
-                uploaded_audio, 
-                "Transcribe this therapy session summary audio precisely. Do not add any extra commentary."
-            ])
-            booking.therapist_audio_transcript = response.text
-            
-            os.remove(temp_file_path)
-            
-        except Exception as e:
-            print(f"Failed to transcribe audio: {e}")
-            booking.therapist_audio_transcript = "[Transcription failed or skipped]"
 
     # Ensure it's marked as completed
     booking.status = "completed"
@@ -351,7 +318,13 @@ async def get_my_group_sessions(
         .where(TherapistGroupSession.therapist_id == profile.id)
         .order_by(TherapistGroupSession.scheduled_date.asc())
     )
-    return sessions.scalars().all()
+    sessions_list = sessions.scalars().all()
+    for session_obj in sessions_list:
+        for e in session_obj.enrollments:
+            if e.status not in ("confirmed", "completed"):
+                e.parent_email = "Hidden until confirmed"
+                
+    return sessions_list
 
 @router.post("/group-sessions", response_model=GroupSessionResponse, status_code=201)
 async def create_group_session(
@@ -422,6 +395,7 @@ async def get_my_videos(
 async def upload_video(
     title: str = Form(...),
     description: Optional[str] = Form(None),
+    category: str = Form("General Education"),
     video: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -449,6 +423,7 @@ async def upload_video(
         therapist_id=profile.id,
         title=title,
         description=description,
+        category=category,
         video_url=video_url,
         is_verified=False
     )

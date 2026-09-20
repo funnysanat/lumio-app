@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, String, DateTime, ForeignKey, JSON, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
@@ -31,5 +31,6 @@ class ActivitySession(Base):
     response = Column(String, nullable=False) # 'independent', 'prompted', 'refused'
     text_note = Column(String, nullable=True)
     voice_note_url = Column(String, nullable=True)
+    ai_summary = Column(Text, nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

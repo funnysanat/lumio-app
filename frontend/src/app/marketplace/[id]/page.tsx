@@ -175,7 +175,9 @@ export default function TherapistProfilePage() {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--background)", gap: "1rem" }}>
       <div style={{ fontSize: "3rem" }}>😕</div>
       <h2>Therapist not found</h2>
-      <Link href="/marketplace" style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>← Back to Marketplace</Link>
+      <Link href="/marketplace" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+        <span>←</span> Back to Marketplace
+      </Link>
     </div>
   );
 
@@ -203,8 +205,8 @@ export default function TherapistProfilePage() {
     <div style={{ minHeight: "100vh", background: "var(--background)", paddingBottom: "6rem" }}>
       {/* Nav */}
       <div style={{ borderBottom: "1px solid var(--border)", background: "var(--card)", padding: "1rem 2rem" }}>
-        <Link href="/marketplace" style={{ color: "var(--muted-foreground)", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}>
-          ← Back to Marketplace
+        <Link href="/marketplace" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span>←</span> Back to Marketplace
         </Link>
       </div>
 
@@ -354,7 +356,9 @@ export default function TherapistProfilePage() {
             <p style={{ color: "var(--muted-foreground)", margin: "0 0 1.25rem" }}>
               {therapist.full_name} will confirm your request within 24 hours. You'll receive an email confirmation.
             </p>
-            <Link href="/dashboard" style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>← Back to Dashboard</Link>
+            <Link href="/dashboard" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>←</span> Back to Dashboard
+            </Link>
           </div>
         )}
 
@@ -366,23 +370,27 @@ export default function TherapistProfilePage() {
             {/* Session Type selector */}
             {(therapist.offers_child_therapy && therapist.offers_caregiver_training) && (
               <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--muted-foreground)", display: "block", marginBottom: "0.5rem" }}>Session Type</label>
+                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--muted-foreground)", display: "block", marginBottom: "0.5rem" }}>Who is this session primarily for?</label>
                 <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
                   <button onClick={() => setSessionType("child_therapy")}
                     style={{ flex: 1, padding: "0.75rem", borderRadius: "0.75rem", cursor: "pointer", fontWeight: 700,
                       background: sessionType === "child_therapy" ? "var(--primary)" : "var(--card)",
                       color: sessionType === "child_therapy" ? "white" : "var(--muted-foreground)",
                       border: `1px solid ${sessionType === "child_therapy" ? "var(--primary)" : "var(--border)"}`,
+                      display: "flex", flexDirection: "column", gap: "0.25rem", alignItems: "center"
                     }}>
-                    👶 Child Therapy
+                    <span>{sessionType === "child_therapy" ? "🔘" : "◯"} My Child</span>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 500, opacity: 0.8 }}>(Direct therapy / observation)</span>
                   </button>
                   <button onClick={() => setSessionType("caregiver_1on1")}
                     style={{ flex: 1, padding: "0.75rem", borderRadius: "0.75rem", cursor: "pointer", fontWeight: 700,
                       background: sessionType === "caregiver_1on1" ? "var(--primary)" : "var(--card)",
                       color: sessionType === "caregiver_1on1" ? "white" : "var(--muted-foreground)",
                       border: `1px solid ${sessionType === "caregiver_1on1" ? "var(--primary)" : "var(--border)"}`,
+                      display: "flex", flexDirection: "column", gap: "0.25rem", alignItems: "center"
                     }}>
-                    🧑‍🏫 Caregiver Training
+                    <span>{sessionType === "caregiver_1on1" ? "🔘" : "◯"} Myself</span>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 500, opacity: 0.8 }}>(Parent training / coaching)</span>
                   </button>
                 </div>
               </div>

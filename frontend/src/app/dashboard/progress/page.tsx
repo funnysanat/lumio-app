@@ -82,11 +82,16 @@ export default function ProgressPage() {
       </header>
 
       <main className="page-wrapper container-lg animate-fade-in">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
-            <h1 style={{ margin: 0 }}>Progress Tracking</h1>
-            <p style={{ color: '#a1a1aa', margin: '0.5rem 0 0 0' }}>See how {childName} is developing over time.</p>
+            <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: 0 }}>Progress Tracker</h1>
+            <p style={{ color: "var(--muted-foreground)", marginTop: "0.5rem" }}>
+              Log home activities via voice notes to get AI-powered insights.
+            </p>
           </div>
+          <Link href="/dashboard/progress/report" style={{ padding: "0.75rem 1.5rem", background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", borderRadius: "0.5rem", fontWeight: 600, textDecoration: "none" }}>
+            📄 View Progress Report
+          </Link>
         </div>
 
         <section style={{ marginBottom: '3rem' }}>

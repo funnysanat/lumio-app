@@ -59,6 +59,8 @@ export default function DashboardPage() {
   const { plan: cachedPlan, snapshot: cachedSnapshot, setPlan, setSnapshot } = useAppStore();
   
   const [videos, setVideos] = useState<any[]>([]);
+  const [myBookings, setMyBookings] = useState<any[]>([]);
+  const [myEnrollments, setMyEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(!cachedPlan);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [hasMounted, setHasMounted] = useState(false);
@@ -118,6 +120,18 @@ export default function DashboardPage() {
           }
         } catch (err) {
           console.error("Could not fetch videos", err);
+        }
+
+        // Fetch Upcoming Sessions
+        try {
+          const [bookRes, enrollRes] = await Promise.all([
+            fetch(`${API_URL}/api/v1/marketplace/bookings/my-bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_URL}/api/v1/marketplace/group-sessions/my-enrollments`, { headers: { 'Authorization': `Bearer ${token}` } })
+          ]);
+          if (bookRes.ok) setMyBookings(await bookRes.json());
+          if (enrollRes.ok) setMyEnrollments(await enrollRes.json());
+        } catch (err) {
+          console.error("Could not fetch sessions", err);
         }
           const snapshotRes = await fetch(`${API_URL}/api/v1/onboarding/assessment`, {
             headers: { 'Authorization': `Bearer ${token}` },
@@ -198,6 +212,52 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Upcoming Sessions Section */}
+        {(myBookings.length > 0 || myEnrollments.length > 0) && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+              My Upcoming Sessions
+              <Link href="/marketplace/workshops" style={{ fontSize: '0.875rem', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>View All →</Link>
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+              
+              {myBookings.map((b: any) => (
+                <div key={b.id} className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem' }}>
+                  <div style={{ background: 'var(--primary)', color: 'white', minWidth: '3rem', width: '3rem', height: '3rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                    {b.mode === 'online' ? '📹' : '🏢'}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>1:1 {b.session_type === 'child_therapy' ? 'Therapy' : 'Consultation'}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
+                      {b.scheduled_date} at {b.scheduled_time} ({b.duration_mins}m)
+                    </div>
+                  </div>
+                  <div style={{ padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize', background: b.status === 'confirmed' ? 'rgba(34,197,94,0.1)' : 'var(--border)', color: b.status === 'confirmed' ? '#22c55e' : 'var(--muted-foreground)' }}>
+                    {b.status}
+                  </div>
+                </div>
+              ))}
+
+              {myEnrollments.map((e: any) => (
+                <div key={e.id} className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem' }}>
+                  <div style={{ background: '#a78bfa', color: 'white', minWidth: '3rem', width: '3rem', height: '3rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                    👥
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.group_session?.title || 'Group Workshop'}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
+                      {e.group_session?.scheduled_date} at {e.group_session?.scheduled_time}
+                    </div>
+                  </div>
+                  <div style={{ padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize', background: e.status === 'confirmed' ? 'rgba(34,197,94,0.1)' : 'var(--border)', color: e.status === 'confirmed' ? '#22c55e' : 'var(--muted-foreground)' }}>
+                    {e.status}
+                  </div>
+                </div>
+              ))}
+              
+            </div>
+          </div>
+        )}
 
         {/* Trending Therapy Videos Carousel */}
         {videos.length > 0 && (
@@ -349,6 +409,39 @@ export default function DashboardPage() {
               </div>
               <div style={{ background: '#a78bfa', color: 'white', padding: '0.5rem 1rem', borderRadius: '2rem', fontWeight: 700, fontSize: '0.87rem', flexShrink: 0, whiteSpace: 'nowrap' }}>
                 View Events →
+              </div>
+            </div>
+          </Link>
+
+          {/* Ask a Therapist */}
+          <Link href="/dashboard/ask" style={{ textDecoration: 'none', display: 'block' }}>
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(56,189,248,0.08) 100%)',
+              border: '1px solid rgba(34,197,94,0.25)',
+              borderRadius: '1rem',
+              padding: '1.25rem 1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              cursor: 'pointer',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
+              height: '100%',
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#22c55e'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(34,197,94,0.12)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(34,197,94,0.25)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ fontSize: '2rem' }}>💬</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.2rem', color: 'var(--foreground)' }}>Ask a Therapist</div>
+                  <div style={{ color: 'var(--muted-foreground)', fontSize: '0.85rem' }}>
+                    Get fast answers to specific questions for ₹199
+                  </div>
+                </div>
+              </div>
+              <div style={{ background: '#22c55e', color: 'white', padding: '0.5rem 1rem', borderRadius: '2rem', fontWeight: 700, fontSize: '0.87rem', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                Ask →
               </div>
             </div>
           </Link>

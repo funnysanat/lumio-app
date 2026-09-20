@@ -52,8 +52,8 @@ export default function ParentBookingsPage() {
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
           <div>
-            <Link href="/marketplace" style={{ color: "var(--muted-foreground)", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600, display: "inline-block", marginBottom: "0.5rem" }}>
-              ← Back to Marketplace
+            <Link href="/marketplace" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: "1rem" }}>
+              <span>←</span> Back to Marketplace
             </Link>
             <h1 style={{ margin: 0 }}>My Sessions</h1>
           </div>
