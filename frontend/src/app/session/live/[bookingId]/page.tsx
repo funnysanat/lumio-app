@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import DailyIframe, { DailyCall } from "@daily-co/daily-js";
-import { DailyProvider, useLocalSessionId, useParticipantIds, useVideoTrack, useAudioTrack, DailyVideo, useDaily } from "@daily-co/daily-react";
+import { DailyProvider, useLocalSessionId, useParticipantIds, useVideoTrack, useAudioTrack, DailyVideo, useDaily, useAppMessage, useParticipantProperty } from "@daily-co/daily-react";
 
 export default function LiveSessionWrapper() {
   const { bookingId } = useParams();
@@ -96,6 +96,7 @@ function LiveSessionUI({ roomUrl }: { roomUrl: string }) {
   const callObject = useDaily();
   const [joined, setJoined] = useState(false);
   const [isMockFallback, setIsMockFallback] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const router = useRouter();
 
   const joinCall = useCallback(async () => {
@@ -136,40 +137,167 @@ function LiveSessionUI({ roomUrl }: { roomUrl: string }) {
 
   if (isMockFallback) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#111" }}>
-        <div style={{ padding: "1rem", background: "rgba(239, 68, 68, 0.2)", color: "#fca5a5", textAlign: "center", fontSize: "0.85rem" }}>
-          <strong>Demo Mode:</strong> You are viewing a simulated session because no DAILY_API_KEY is configured on the backend.
-        </div>
-        <div style={{ flex: 1, position: "relative", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", padding: "1rem", gap: "1rem" }}>
-          <div style={{ flex: 1, minWidth: "320px", height: "100%", maxHeight: "calc(100vh - 100px)", background: "#222", borderRadius: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#666" }}>
-            Waiting for others to join...
+      <div style={{ display: "flex", height: "100vh", background: "#111" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "1rem", background: "rgba(239, 68, 68, 0.2)", color: "#fca5a5", textAlign: "center", fontSize: "0.85rem" }}>
+            <strong>Demo Mode:</strong> You are viewing a simulated session because no DAILY_API_KEY is configured on the backend.
           </div>
-          <HTML5LocalVideo />
+          <div style={{ flex: 1, position: "relative", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", padding: "1rem", gap: "1rem" }}>
+            <div style={{ flex: 1, minWidth: "320px", height: "100%", maxHeight: "calc(100vh - 100px)", background: "#222", borderRadius: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", color: "#666" }}>
+              Waiting for others to join...
+            </div>
+            <HTML5LocalVideo />
+          </div>
+          
+          {/* Controls */}
+          <div style={{ padding: "1rem", background: "#000", display: "flex", justifyContent: "center", gap: "1rem" }}>
+            <button onClick={() => setChatOpen(!chatOpen)} style={{ padding: "0.75rem 1.5rem", background: "#333", color: "white", border: "none", borderRadius: "0.5rem", fontWeight: 700, cursor: "pointer" }}>
+              {chatOpen ? "Hide Chat" : "Show Chat"}
+            </button>
+            <button onClick={leaveCall} style={{ padding: "0.75rem 1.5rem", background: "#ef4444", color: "white", border: "none", borderRadius: "0.5rem", fontWeight: 700, cursor: "pointer" }}>
+              End Session
+            </button>
+          </div>
         </div>
-        
-        {/* Controls */}
-        <div style={{ padding: "1rem", background: "#000", display: "flex", justifyContent: "center", gap: "1rem" }}>
-          <button onClick={leaveCall} style={{ padding: "0.75rem 1.5rem", background: "#ef4444", color: "white", border: "none", borderRadius: "0.5rem", fontWeight: 700, cursor: "pointer" }}>
-            End Session
-          </button>
-        </div>
+        {chatOpen && <ChatSidebar onClose={() => setChatOpen(false)} />}
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#111" }}>
-      <div style={{ flex: 1, position: "relative", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", padding: "1rem", gap: "1rem" }}>
-        <RemoteParticipants />
-        <LocalParticipant />
+    <div style={{ display: "flex", height: "100vh", background: "#111" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, position: "relative", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", padding: "1rem", gap: "1rem" }}>
+          <RemoteParticipants />
+          <LocalParticipant />
+        </div>
+        
+        {/* Controls */}
+        <div style={{ padding: "1rem", background: "#000", display: "flex", justifyContent: "center", gap: "1rem" }}>
+          <button onClick={() => setChatOpen(!chatOpen)} style={{ padding: "0.75rem 1.5rem", background: "#333", color: "white", border: "none", borderRadius: "0.5rem", fontWeight: 700, cursor: "pointer" }}>
+            {chatOpen ? "Hide Chat" : "Show Chat"}
+          </button>
+          <button onClick={leaveCall} style={{ padding: "0.75rem 1.5rem", background: "#ef4444", color: "white", border: "none", borderRadius: "0.5rem", fontWeight: 700, cursor: "pointer" }}>
+            End Session
+          </button>
+        </div>
+      </div>
+      {chatOpen && <ChatSidebar onClose={() => setChatOpen(false)} />}
+    </div>
+  );
+}
+
+function ChatSidebar({ onClose }: { onClose: () => void }) {
+  const localSessionId = useLocalSessionId();
+  const localUserName = useParticipantProperty(localSessionId || "", "user_name") || "You";
+  
+  const { getToken } = useAuth();
+  const [messages, setMessages] = useState<any[]>([]);
+  const [text, setText] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+  const sendAppMessage = useAppMessage({
+    onAppMessage: (ev) => {
+      setMessages((prev) => [...prev, { ...ev.data, fromId: ev.fromId, timestamp: Date.now() }]);
+    },
+  });
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendText = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+    
+    const msg = { type: 'text', content: text, senderName: localUserName };
+    sendAppMessage(msg);
+    setMessages(prev => [...prev, { ...msg, fromId: 'local', timestamp: Date.now() }]);
+    setText("");
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploading(true);
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const res = await fetch(`${API_URL}/api/v1/session/upload-chat-file`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      
+      const msg = { type: 'file', content: data.url, fileName: data.filename, senderName: localUserName };
+      sendAppMessage(msg);
+      setMessages(prev => [...prev, { ...msg, fromId: 'local', timestamp: Date.now() }]);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to upload file");
+    } finally {
+      setUploading(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  return (
+    <div style={{ width: "320px", background: "#1a1a1a", display: "flex", flexDirection: "column", borderLeft: "1px solid #333" }}>
+      <div style={{ padding: "1rem", borderBottom: "1px solid #333", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h3 style={{ margin: 0, color: "white", fontSize: "1.1rem" }}>Session Chat</h3>
+        <button onClick={onClose} style={{ background: "none", border: "none", color: "#999", cursor: "pointer", fontSize: "1.2rem" }}>✕</button>
       </div>
       
-      {/* Controls */}
-      <div style={{ padding: "1rem", background: "#000", display: "flex", justifyContent: "center", gap: "1rem" }}>
-        <button onClick={leaveCall} style={{ padding: "0.75rem 1.5rem", background: "#ef4444", color: "white", border: "none", borderRadius: "0.5rem", fontWeight: 700, cursor: "pointer" }}>
-          End Session
-        </button>
+      <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {messages.length === 0 ? (
+          <div style={{ color: "#666", textAlign: "center", marginTop: "2rem", fontSize: "0.9rem" }}>No messages yet. Say hi!</div>
+        ) : (
+          messages.map((m, i) => (
+            <div key={i} style={{ alignSelf: m.fromId === 'local' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+              <div style={{ fontSize: "0.7rem", color: "#666", marginBottom: "0.25rem", textAlign: m.fromId === 'local' ? 'right' : 'left' }}>
+                {m.fromId === 'local' ? 'You' : m.senderName || 'Participant'}
+              </div>
+              <div style={{ background: m.fromId === 'local' ? 'var(--primary)' : '#333', color: 'white', padding: "0.5rem 0.75rem", borderRadius: "0.5rem", fontSize: "0.9rem" }}>
+                {m.type === 'text' ? (
+                  m.content
+                ) : (
+                  <a href={m.content} target="_blank" rel="noopener noreferrer" style={{ color: "white", textDecoration: "underline", display: "flex", alignItems: "center", gap: "0.5rem", wordBreak: 'break-all' }}>
+                    📎 {m.fileName || 'Shared Document'}
+                  </a>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+        <div ref={messagesEndRef} />
       </div>
+      
+      <form onSubmit={handleSendText} style={{ padding: "1rem", borderTop: "1px solid #333", display: "flex", gap: "0.5rem" }}>
+        <div style={{ position: "relative" }}>
+          <input type="file" id="file-upload" style={{ display: "none" }} onChange={handleFileUpload} disabled={uploading} />
+          <label htmlFor="file-upload" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", background: "#333", borderRadius: "0.25rem", cursor: "pointer", color: "#ccc" }}>
+            {uploading ? "⏳" : "📎"}
+          </label>
+        </div>
+        <input 
+          type="text" 
+          value={text} 
+          onChange={e => setText(e.target.value)} 
+          placeholder="Type a message..." 
+          style={{ flex: 1, padding: "0.5rem", borderRadius: "0.25rem", border: "1px solid #444", background: "#222", color: "white", outline: "none", minWidth: 0 }}
+        />
+        <button type="submit" disabled={!text.trim()} style={{ padding: "0 1rem", background: "var(--primary)", color: "white", border: "none", borderRadius: "0.25rem", cursor: text.trim() ? "pointer" : "not-allowed" }}>
+          Send
+        </button>
+      </form>
     </div>
   );
 }

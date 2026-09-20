@@ -412,6 +412,39 @@ export default function DashboardPage() {
               </div>
             </div>
           </Link>
+
+          {/* Ask a Therapist */}
+          <Link href="/dashboard/ask" style={{ textDecoration: 'none', display: 'block' }}>
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(56,189,248,0.08) 100%)',
+              border: '1px solid rgba(34,197,94,0.25)',
+              borderRadius: '1rem',
+              padding: '1.25rem 1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              cursor: 'pointer',
+              transition: 'border-color 0.2s, box-shadow 0.2s',
+              height: '100%',
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#22c55e'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(34,197,94,0.12)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(34,197,94,0.25)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ fontSize: '2rem' }}>💬</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.2rem', color: 'var(--foreground)' }}>Ask a Therapist</div>
+                  <div style={{ color: 'var(--muted-foreground)', fontSize: '0.85rem' }}>
+                    Get fast answers to specific questions for ₹199
+                  </div>
+                </div>
+              </div>
+              <div style={{ background: '#22c55e', color: 'white', padding: '0.5rem 1rem', borderRadius: '2rem', fontWeight: 700, fontSize: '0.87rem', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                Ask →
+              </div>
+            </div>
+          </Link>
           
         </div>
 

@@ -198,10 +198,13 @@ async def get_progress_history(
         
         history[date_str]["sessions"].append({
             "id": s.id,
+            "activity_id": s.activity_id,
             "activity_name": activity_name,
             "response": s.response,
             "text_note": s.text_note,
             "voice_note_url": s.voice_note_url,
+            "ai_summary": s.ai_summary,
+            "created_at": s.created_at.isoformat(),
             "time": s.created_at.strftime("%H:%M")
         })
         history[date_str]["total_completed"] += 1

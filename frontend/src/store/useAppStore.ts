@@ -37,9 +37,10 @@ export type SessionInfo = {
   id: string;
   activity_name: string;
   response: string;
-  time: string;
   text_note: string | null;
   voice_note_url: string | null;
+  ai_summary?: string | null;
+  time: string;
 };
 
 export type HistoryData = {

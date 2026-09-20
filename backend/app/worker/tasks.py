@@ -180,10 +180,6 @@ def generate_daily_plans_for_all_users():
 
 async def _generate_session_summary_async(booking_id: str, recording_id: str):
     from app.models.therapist import TherapistBooking
-    import google.generativeai as genai
-    from google.generativeai.types import HarmCategory, HarmBlockThreshold
-    
-    genai.configure(api_key=settings.GEMINI_API_KEY)
     
     async with async_session_maker() as db:
         res = await db.execute(select(TherapistBooking).filter(TherapistBooking.id == booking_id))
@@ -192,30 +188,18 @@ async def _generate_session_summary_async(booking_id: str, recording_id: str):
             print(f"Booking {booking_id} not found.")
             return
 
-        # Mock downloading the file and uploading to Gemini since we don't have Daily API key
-        # In real implementation: download from Daily.co, then genai.upload_file(file_path)
         print(f"Mock analyzing recording {recording_id} for booking {booking_id}")
         
-        # We will use Gemini to generate a text summary based on the mock context
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        prompt = f"""
-        Act as an expert pediatric therapist observing a session.
-        Since the actual video is not available in this mock run, generate a realistic but generic AI summary for a therapy session regarding '{booking.child_condition or 'general development'}'.
-        
-        The summary must include:
-        1. Key Observations (2-3 bullet points)
-        2. Child's Engagement Level (brief sentence)
-        3. Parent Home Practice Recommendations (2 actionable activities)
-        """
-        
-        response = model.generate_content(prompt)
+        # AI Multimodal Video Analysis has been temporarily disabled to save on costs.
+        # It will be implemented at a later phase.
+        mock_ai_summary = "AI Summary generation is temporarily disabled to manage processing costs. Please rely on the therapist's manual notes."
         
         # Mock download from Daily and upload to GCP
         from app.services.gcp_storage import upload_file_to_gcp
         mock_video_bytes = b"mock video file data content"
         gcp_url = await upload_file_to_gcp(mock_video_bytes, f"recordings/{booking_id}_{recording_id}.mp4", "video/mp4")
         
-        booking.ai_summary = response.text
+        booking.ai_summary = mock_ai_summary
         booking.status = "completed"
         booking.recording_url = gcp_url or f"https://storage.googleapis.com/lumio-mock-bucket/recordings/{booking_id}_{recording_id}.mp4"
         

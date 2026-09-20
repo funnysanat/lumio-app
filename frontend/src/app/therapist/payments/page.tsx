@@ -46,11 +46,12 @@ export default function TherapistPaymentsPage() {
 
   const completedSessions = bookings.filter(b => b.status === "completed" || b.status === "confirmed");
   
-  // Basic calculation: total earnings from completed sessions
-  const totalEarningsPaise = completedSessions.reduce((acc, b) => acc + (b.session_price || 0), 0);
-  const totalEarnings = totalEarningsPaise / 100;
+  // Calculate net earnings from completed sessions (Therapist gets 88% of base price)
+  const totalNetEarningsPaise = completedSessions.reduce((acc, b) => acc + (b.session_price ? b.session_price * 0.88 : 0), 0);
+  const totalNetEarnings = totalNetEarningsPaise / 100;
 
   const fmt = (paise: number | null) => paise ? `₹${(paise / 100).toLocaleString("en-IN")}` : "—";
+  const fmtNet = (paise: number | null) => paise ? `₹${((paise * 0.88) / 100).toLocaleString("en-IN")}` : "—";
 
   if (loading) return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--background)" }}>
@@ -85,8 +86,8 @@ export default function TherapistPaymentsPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
           <div className="card" style={{ padding: "1.5rem", textAlign: "center", background: "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(56,189,248,0.1))" }}>
             <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>💸</div>
-            <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--foreground)" }}>₹{totalEarnings.toLocaleString("en-IN")}</div>
-            <div style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", fontWeight: 600, marginTop: "0.25rem" }}>Total Estimated Earnings</div>
+            <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--foreground)" }}>₹{totalNetEarnings.toLocaleString("en-IN", {maximumFractionDigits:0})}</div>
+            <div style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", fontWeight: 600, marginTop: "0.25rem" }}>Total Net Earnings (After Platform Fee)</div>
           </div>
           <div className="card" style={{ padding: "1.5rem", textAlign: "center" }}>
             <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📈</div>
@@ -111,7 +112,8 @@ export default function TherapistPaymentsPage() {
                     <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "var(--muted-foreground)" }}>Date & Time</th>
                     <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "var(--muted-foreground)" }}>Patient</th>
                     <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "var(--muted-foreground)" }}>Type</th>
-                    <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "var(--muted-foreground)", textAlign: "right" }}>Amount</th>
+                    <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "var(--muted-foreground)", textAlign: "right" }}>Gross Price</th>
+                    <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "var(--muted-foreground)", textAlign: "right" }}>Net Earnings</th>
                     <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "var(--muted-foreground)", textAlign: "center" }}>Status</th>
                   </tr>
                 </thead>
@@ -129,8 +131,11 @@ export default function TherapistPaymentsPage() {
                       <td style={{ padding: "1rem 1.5rem", textTransform: "capitalize", color: "var(--muted-foreground)" }}>
                         {b.mode}
                       </td>
-                      <td style={{ padding: "1rem 1.5rem", fontWeight: 700, color: "#22c55e", textAlign: "right" }}>
+                      <td style={{ padding: "1rem 1.5rem", color: "var(--muted-foreground)", textAlign: "right" }}>
                         {fmt(b.session_price)}
+                      </td>
+                      <td style={{ padding: "1rem 1.5rem", fontWeight: 700, color: "#22c55e", textAlign: "right" }}>
+                        {fmtNet(b.session_price)}
                       </td>
                       <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
                         {b.status === "completed" ? (

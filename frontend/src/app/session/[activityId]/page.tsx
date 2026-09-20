@@ -55,10 +55,7 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
   
   const [responseType, setResponseType] = useState<string>('');
   
-  // Audio Recording State
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  // Activity Data State
   const [showStruggleTips, setShowStruggleTips] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [textNote, setTextNote] = useState<string>('');
@@ -115,36 +112,6 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
     }
   }, [role]);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: BlobPart[] = [];
-      
-      recorder.ondataavailable = (e) => chunks.push(e.data);
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        setAudioBlob(blob);
-      };
-      
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-      setAudioBlob(null); // clear previous if any
-    } catch (err) {
-      console.error("Failed to start recording", err);
-      alert("Microphone access is required to record voice notes.");
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      setIsRecording(false);
-      mediaRecorder.stream.getTracks().forEach(track => track.stop());
-    }
-  };
-
   const handleResponse = (resp: string) => {
     setResponseType(resp);
     updateSessionState('logging');
@@ -157,10 +124,6 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
       const formData = new FormData();
       formData.append('activity_id', activityId);
       formData.append('response', responseType);
-      
-      if (audioBlob) {
-        formData.append('audio_file', audioBlob, 'voicenote.webm');
-      }
       
       if (textNote.trim()) {
         formData.append('text_note', textNote.trim());
@@ -428,35 +391,6 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
                       placeholder="Write any additional observations here..."
                       style={{ width: '100%', minHeight: '80px', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', backgroundColor: 'var(--background)', color: 'var(--foreground)', fontFamily: 'inherit', resize: 'vertical' }}
                     />
-                  </div>
-                  
-                  {/* Voice Note Recording */}
-                  <div style={{ border: '1px solid var(--border)', padding: '1.5rem', borderRadius: '0.5rem', marginBottom: '1.5rem', backgroundColor: 'var(--card-bg)' }}>
-                    <p style={{ margin: '0 0 1rem 0', fontSize: '0.875rem', fontWeight: 600, color: 'var(--foreground)' }}>🎙 Add a Voice Note (Optional)</p>
-                    
-                    {!isRecording && !audioBlob && (
-                      <button className="btn btn-outline" style={{ width: '100%', borderColor: 'var(--primary)', color: 'var(--primary)' }} onClick={startRecording}>
-                        Tap to Start Recording
-                      </button>
-                    )}
-                    
-                    {isRecording && (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{ width: '20px', height: '20px', backgroundColor: '#ef4444', borderRadius: '50%', animation: 'pulse 1.5s infinite' }} />
-                        <button className="btn" style={{ backgroundColor: '#ef4444', color: 'white', width: '100%' }} onClick={stopRecording}>
-                          Stop Recording
-                        </button>
-                      </div>
-                    )}
-
-                    {audioBlob && !isRecording && (
-                      <div>
-                        <p style={{ color: '#166534', fontSize: '0.875rem', marginBottom: '1rem' }}>✓ Audio recorded successfully</p>
-                        <button className="btn btn-outline" style={{ width: '100%', fontSize: '0.875rem' }} onClick={startRecording}>
-                          Retake
-                        </button>
-                      </div>
-                    )}
                   </div>
 
                   <div style={{ display: 'flex', gap: '1rem' }}>

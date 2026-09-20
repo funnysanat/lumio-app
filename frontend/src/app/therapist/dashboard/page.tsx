@@ -22,6 +22,8 @@ type Booking = {
   session_price: number | null;
   status: string;
   therapist_notes: string | null;
+  ai_summary?: string | null;
+  therapist_audio_transcript?: string | null;
   created_at: string;
 };
 
@@ -51,6 +53,18 @@ const TYPE_CONFIG: Record<string, { label: string; icon: string }> = {
   child_therapy: { label: "Child Therapy", icon: "👶" },
   caregiver_1on1: { label: "Caregiver Training", icon: "🧑‍🏫" },
   caregiver_group: { label: "Group Workshop", icon: "👥" },
+};
+
+const isSessionOver = (dateStr: string, timeStr: string, durationMins: number) => {
+  if (!dateStr || !timeStr) return false;
+  // Parse "YYYY-MM-DD" and "HH:MM"
+  const sessionStart = new Date(`${dateStr}T${timeStr}:00`);
+  if (isNaN(sessionStart.getTime())) return false;
+  
+  const sessionEnd = new Date(sessionStart.getTime() + durationMins * 60000);
+  const now = new Date();
+  
+  return now > sessionEnd;
 };
 
 export default function TherapistDashboardPage() {
@@ -299,18 +313,59 @@ export default function TherapistDashboardPage() {
                               📹 Join Video
                             </Link>
                           )}
-                          <button onClick={() => setSummaryBookingId(b.id)} style={{ padding: "0.75rem 1rem", borderRadius: "0.75rem", background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", cursor: "pointer", fontWeight: 700 }}>
-                            Add Post-Session Summary
-                          </button>
+                          {(() => {
+                            const sessionOver = isSessionOver(b.scheduled_date, b.scheduled_time, b.duration_mins);
+                            return (
+                              <button 
+                                onClick={() => setSummaryBookingId(b.id)} 
+                                disabled={!sessionOver}
+                                title={!sessionOver ? "Available after the session ends" : ""}
+                                style={{ 
+                                  padding: "0.75rem 1rem", 
+                                  borderRadius: "0.75rem", 
+                                  background: sessionOver ? "var(--card)" : "rgba(255,255,255,0.05)", 
+                                  color: sessionOver ? "var(--foreground)" : "var(--muted-foreground)", 
+                                  border: `1px solid ${sessionOver ? "var(--border)" : "transparent"}`, 
+                                  cursor: sessionOver ? "pointer" : "not-allowed", 
+                                  fontWeight: 700 
+                                }}
+                              >
+                                Add Post-Session Summary
+                              </button>
+                            );
+                          })()}
                         </div>
                       </div>
                     )}
                     {b.status === "completed" && (
-                      <div style={{ borderTop: "1px solid var(--border)", padding: "1.25rem", background: "var(--muted)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-                        <span style={{ fontSize: "0.9rem", color: "var(--muted-foreground)" }}>Session completed. Summary provided.</span>
-                        <button onClick={() => setSummaryBookingId(b.id)} style={{ padding: "0.5rem 1rem", borderRadius: "0.5rem", background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", cursor: "pointer", fontWeight: 600, fontSize: "0.85rem" }}>
-                          Edit Summary
-                        </button>
+                      <div style={{ borderTop: "1px solid var(--border)", padding: "1.25rem", background: "var(--muted)", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+                          <span style={{ fontSize: "0.9rem", color: "var(--muted-foreground)" }}>Session completed. Summary provided.</span>
+                          <button onClick={() => setSummaryBookingId(b.id)} style={{ padding: "0.5rem 1rem", borderRadius: "0.5rem", background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", cursor: "pointer", fontWeight: 600, fontSize: "0.85rem" }}>
+                            Edit Summary
+                          </button>
+                        </div>
+                        
+                        {(b.ai_summary || b.therapist_audio_transcript) && (
+                          <div style={{ background: "var(--card)", padding: "1rem", borderRadius: "0.5rem", border: "1px solid var(--border)" }}>
+                            {b.ai_summary && (
+                              <div style={{ marginBottom: "1rem" }}>
+                                <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.9rem", color: "var(--primary)" }}>📝 AI SOAP Notes</h4>
+                                <pre style={{ margin: 0, fontSize: "0.85rem", whiteSpace: "pre-wrap", fontFamily: "inherit", color: "var(--foreground)", lineHeight: 1.5 }}>
+                                  {b.ai_summary}
+                                </pre>
+                              </div>
+                            )}
+                            {b.therapist_audio_transcript && (
+                              <details>
+                                <summary style={{ fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", color: "var(--muted-foreground)" }}>Show Raw Transcript</summary>
+                                <div style={{ marginTop: "0.5rem", padding: "0.75rem", background: "rgba(0,0,0,0.2)", borderRadius: "0.25rem", fontSize: "0.8rem", color: "var(--muted-foreground)", fontStyle: "italic" }}>
+                                  {b.therapist_audio_transcript}
+                                </div>
+                              </details>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
