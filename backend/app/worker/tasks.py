@@ -245,10 +245,50 @@ async def _verify_video_content_async(video_id: str):
         if not video:
             return
             
-        print(f"Verifying video {video_id} using PyTorch and OpenCV models...")
-        # Placeholder for PyTorch/OpenCV verification logic against mental health data
-        await asyncio.sleep(2) # simulate processing
-        is_safe = True # Mocking safe video
+        print(f"Verifying video {video_id} using Gemini 1.5 Flash...")
+        import google.generativeai as genai
+        from app.core.config import settings
+        
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        
+        # In a full production system, you can download the video from video.video_url
+        # to a temp file, upload it using genai.upload_file(), and pass it directly to the model.
+        # For this implementation, we will use Gemini to strictly analyze the metadata.
+        
+        prompt = f"""
+        You are a strict compliance officer for a pediatric therapy platform.
+        Analyze the following video metadata for compliance with strict educational guidelines.
+        
+        Video Title: {video.title}
+        Video Description: {video.description or "No description provided"}
+        
+        It must NOT contain: 
+        - self-promotional content or spam ("subscribe", "buy my course")
+        - sexual or inappropriate content
+        - religious themes
+        - claims that medicines cure diseases or "miracle" hoaxes.
+        
+        It must be purely educational content related to therapy.
+        
+        Respond ONLY with a JSON object in the following format:
+        {{"is_safe": true/false, "reason": "1 sentence explanation"}}
+        """
+        
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        response = model.generate_content(prompt)
+        
+        try:
+            import json
+            # Clean up potential markdown formatting in response
+            response_text = response.text.strip().removeprefix("```json").removesuffix("```").strip()
+            result = json.loads(response_text)
+            is_safe = result.get("is_safe", False)
+            reason = result.get("reason", "Failed to parse reason")
+            print(f"Gemini Verification Result: Safe={is_safe}, Reason={reason}")
+        except Exception as e:
+            print(f"Failed to parse Gemini response: {e}")
+            is_safe = False
+        
         
         video.is_verified = is_safe
         

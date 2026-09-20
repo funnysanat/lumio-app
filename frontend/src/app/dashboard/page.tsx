@@ -59,6 +59,8 @@ export default function DashboardPage() {
   const { plan: cachedPlan, snapshot: cachedSnapshot, setPlan, setSnapshot } = useAppStore();
   
   const [videos, setVideos] = useState<any[]>([]);
+  const [myBookings, setMyBookings] = useState<any[]>([]);
+  const [myEnrollments, setMyEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(!cachedPlan);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [hasMounted, setHasMounted] = useState(false);
@@ -118,6 +120,18 @@ export default function DashboardPage() {
           }
         } catch (err) {
           console.error("Could not fetch videos", err);
+        }
+
+        // Fetch Upcoming Sessions
+        try {
+          const [bookRes, enrollRes] = await Promise.all([
+            fetch(`${API_URL}/api/v1/marketplace/bookings/my-bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_URL}/api/v1/marketplace/group-sessions/my-enrollments`, { headers: { 'Authorization': `Bearer ${token}` } })
+          ]);
+          if (bookRes.ok) setMyBookings(await bookRes.json());
+          if (enrollRes.ok) setMyEnrollments(await enrollRes.json());
+        } catch (err) {
+          console.error("Could not fetch sessions", err);
         }
           const snapshotRes = await fetch(`${API_URL}/api/v1/onboarding/assessment`, {
             headers: { 'Authorization': `Bearer ${token}` },
@@ -198,6 +212,52 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Upcoming Sessions Section */}
+        {(myBookings.length > 0 || myEnrollments.length > 0) && (
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+              My Upcoming Sessions
+              <Link href="/marketplace/workshops" style={{ fontSize: '0.875rem', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>View All →</Link>
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+              
+              {myBookings.map((b: any) => (
+                <div key={b.id} className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem' }}>
+                  <div style={{ background: 'var(--primary)', color: 'white', minWidth: '3rem', width: '3rem', height: '3rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                    {b.mode === 'online' ? '📹' : '🏢'}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>1:1 {b.session_type === 'child_therapy' ? 'Therapy' : 'Consultation'}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
+                      {b.scheduled_date} at {b.scheduled_time} ({b.duration_mins}m)
+                    </div>
+                  </div>
+                  <div style={{ padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize', background: b.status === 'confirmed' ? 'rgba(34,197,94,0.1)' : 'var(--border)', color: b.status === 'confirmed' ? '#22c55e' : 'var(--muted-foreground)' }}>
+                    {b.status}
+                  </div>
+                </div>
+              ))}
+
+              {myEnrollments.map((e: any) => (
+                <div key={e.id} className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem' }}>
+                  <div style={{ background: '#a78bfa', color: 'white', minWidth: '3rem', width: '3rem', height: '3rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
+                    👥
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.group_session?.title || 'Group Workshop'}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
+                      {e.group_session?.scheduled_date} at {e.group_session?.scheduled_time}
+                    </div>
+                  </div>
+                  <div style={{ padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize', background: e.status === 'confirmed' ? 'rgba(34,197,94,0.1)' : 'var(--border)', color: e.status === 'confirmed' ? '#22c55e' : 'var(--muted-foreground)' }}>
+                    {e.status}
+                  </div>
+                </div>
+              ))}
+              
+            </div>
+          </div>
+        )}
 
         {/* Trending Therapy Videos Carousel */}
         {videos.length > 0 && (

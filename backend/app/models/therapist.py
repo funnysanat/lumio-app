@@ -167,6 +167,7 @@ class TherapistVideo(Base):
     therapist_id = Column(String, ForeignKey("therapist_profiles.id"), nullable=False)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
+    category = Column(String, nullable=False, default="General Education")
     video_url = Column(String, nullable=False)
     is_verified = Column(Boolean, default=False)
     views_count = Column(Integer, default=0)

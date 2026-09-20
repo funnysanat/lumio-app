@@ -206,8 +206,14 @@ async def get_my_bookings(
         .where(TherapistBooking.therapist_id == profile.id)
         .order_by(TherapistBooking.created_at.desc())
     )
-    return bookings_result.scalars().all()
-
+    bookings = bookings_result.scalars().all()
+    for b in bookings:
+        if b.status not in ("confirmed", "completed"):
+            b.parent_email = "Hidden until confirmed"
+            if getattr(b, 'parent_phone', None):
+                b.parent_phone = "Hidden until confirmed"
+    
+    return bookings
 
 @router.patch("/bookings/{booking_id}", response_model=BookingResponse)
 async def update_booking_status(
@@ -351,7 +357,13 @@ async def get_my_group_sessions(
         .where(TherapistGroupSession.therapist_id == profile.id)
         .order_by(TherapistGroupSession.scheduled_date.asc())
     )
-    return sessions.scalars().all()
+    sessions_list = sessions.scalars().all()
+    for session_obj in sessions_list:
+        for e in session_obj.enrollments:
+            if e.status not in ("confirmed", "completed"):
+                e.parent_email = "Hidden until confirmed"
+                
+    return sessions_list
 
 @router.post("/group-sessions", response_model=GroupSessionResponse, status_code=201)
 async def create_group_session(
@@ -422,6 +434,7 @@ async def get_my_videos(
 async def upload_video(
     title: str = Form(...),
     description: Optional[str] = Form(None),
+    category: str = Form("General Education"),
     video: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -449,6 +462,7 @@ async def upload_video(
         therapist_id=profile.id,
         title=title,
         description=description,
+        category=category,
         video_url=video_url,
         is_verified=False
     )

@@ -85,8 +85,8 @@ export default function MarketplacePage() {
         padding: "3rem 2rem 2rem",
         textAlign: "center",
       }}>
-        <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none", color: "var(--muted-foreground)", fontSize: "0.85rem", marginBottom: "1.5rem", fontWeight: 600 }}>
-          ← Back to Dashboard
+        <Link href="/dashboard" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: "1.5rem" }}>
+          <span>←</span> Back to Dashboard
         </Link>
         <h1 style={{ margin: "0 0 0.5rem", fontWeight: 800, fontSize: "2.25rem", lineHeight: 1.2 }}>
           Find a Therapist
