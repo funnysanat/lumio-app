@@ -103,22 +103,60 @@ def calculate_match_score(therapist: TherapistProfile, child: Optional[ChildProf
 @router.get("/search", response_model=list[TherapistPublicResponse])
 async def search_therapists(
     city: Optional[str] = Query(None),
+    pincode: Optional[str] = Query(None),
+    address: Optional[str] = Query(None),
     mode: Optional[str] = Query(None),       # "online" | "offline" | "both"
     specialisation: Optional[str] = Query(None),
     language: Optional[str] = Query(None),
+    lat: Optional[float] = Query(None),
+    lng: Optional[float] = Query(None),
+    radius_km: float = Query(20.0),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Search and rank therapists. Results are scored by child-profile match."""
+    from sqlalchemy.sql import func
+    
     query = (
         select(TherapistProfile)
         .options(selectinload(TherapistProfile.availability))
         .where(TherapistProfile.is_listing_active == True)  # noqa: E712
     )
 
+    # Determine coordinates to search from
+    search_lat = lat
+    search_lng = lng
+
+    # If the user is specifically looking for online therapy, skip geolocation constraints
+    if mode == "online":
+        search_lat = None
+        search_lng = None
+        city = None
+        pincode = None
+        address = None
+    else:
+        if search_lat is None and (city or pincode or address):
+            from app.utils.geocoder import geocode_address
+            geo_lat, geo_lng = await geocode_address(address=address or "", city=city or "", pincode=pincode or "")
+            if geo_lat and geo_lng:
+                search_lat = geo_lat
+                search_lng = geo_lng
+                
+        # Auto-fallback to the parent's saved location if no explicit location coordinates were determined
+        if search_lat is None:
+            search_lat = current_user.lat
+            search_lng = current_user.lng
+
     # Apply filters
-    if city:
+    if city and search_lat is None: # Fallback to text match only if no coordinates were found at all
         query = query.where(TherapistProfile.city.ilike(f"%{city}%"))
+    if pincode and search_lat is None:
+        query = query.where(TherapistProfile.pincode.ilike(f"%{pincode}%"))
+    if address and search_lat is None:
+        first_word = address.split()[0] if address.split() else address
+        query = query.where(TherapistProfile.address.ilike(f"%{first_word[:8]}%"))
     if mode and mode != "both":
         query = query.where(
             (TherapistProfile.mode == mode) | (TherapistProfile.mode == "both")
@@ -127,10 +165,49 @@ async def search_therapists(
         query = query.where(TherapistProfile.specialisations.any(specialisation.lower()))
     if language:
         query = query.where(TherapistProfile.languages.any(language))
+        
+    # Location distance filter using Haversine formula (6371 = Earth radius in km)
+    if search_lat is not None and search_lng is not None:
+        # Avoid division by zero or out-of-bounds acos by bounding
+        distance = (
+            6371.0 * func.acos(
+                func.least(1.0, func.sin(func.radians(search_lat)) * func.sin(func.radians(TherapistProfile.lat)) +
+                func.cos(func.radians(search_lat)) * func.cos(func.radians(TherapistProfile.lat)) *
+                func.cos(func.radians(TherapistProfile.lng) - func.radians(search_lng)))
+            )
+        )
+        
+        # We include therapists if they are within radius OR (if they lack coordinates but match the requested city/pincode text)
+        from sqlalchemy import or_
+        conditions = [(TherapistProfile.lat.is_not(None)) & (distance <= radius_km)]
+        
+        match_city = city or current_user.city
+        match_pincode = pincode or current_user.pincode
+        match_address = address or current_user.address
+        
+        # We do a loose text match for therapists that failed geocoding (lat is None)
+        if match_city:
+            # handle typos like "bengauru" by taking first 5 chars for loose match, or just direct ilike
+            conditions.append(TherapistProfile.lat.is_(None) & TherapistProfile.city.ilike(f"%{match_city[:5]}%"))
+        if match_pincode:
+            conditions.append(TherapistProfile.lat.is_(None) & TherapistProfile.pincode.ilike(f"%{match_pincode}%"))
+        if match_address:
+            first_word = match_address.split()[0] if match_address.split() else match_address
+            conditions.append(TherapistProfile.lat.is_(None) & TherapistProfile.address.ilike(f"%{first_word[:8]}%"))
+            
+        if len(conditions) > 1:
+            query = query.where(or_(*conditions))
+        else:
+            query = query.where(conditions[0])
+            
+        # We could sort by distance directly in SQL, but we also have a complex match score.
+        # We will retrieve distance as well.
+        query = query.add_columns(distance.label("distance_km"))
+    else:
+        query = query.add_columns(func.cast(None, func.Float()).label("distance_km"))
 
     result = await db.execute(query)
-    therapists = result.scalars().all()
-
+    
     # Load child profile for match scoring
     child_result = await db.execute(
         select(ChildProfile).filter(ChildProfile.user_id == current_user.id)
@@ -139,14 +216,23 @@ async def search_therapists(
 
     # Score and sort
     scored = []
-    for t in therapists:
+    for row in result.all():
+        t = row[0]
+        dist = row.distance_km
+        
         score = calculate_match_score(t, child)
+        
+        # Boost score slightly if nearby
+        if dist is not None and dist < 10.0:
+            score += 0.1
+            
         t_dict = TherapistPublicResponse.model_validate(t)
         t_dict.match_score = score
+        t_dict.distance_km = dist
         scored.append(t_dict)
 
     scored.sort(key=lambda x: x.match_score or 0, reverse=True)
-    return scored
+    return scored[skip : skip + limit]
 
 
 @router.get("/therapist/{therapist_id}", response_model=TherapistPublicResponse)
@@ -330,6 +416,8 @@ async def get_my_bookings(
 
 @router.get("/group-sessions", response_model=list[GroupSessionResponse])
 async def get_available_group_sessions(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -343,6 +431,8 @@ async def get_available_group_sessions(
         .options(selectinload(TherapistGroupSession.enrollments))
         .where(TherapistGroupSession.current_participants < TherapistGroupSession.max_participants)
         .order_by(TherapistGroupSession.scheduled_date.asc())
+        .offset(skip)
+        .limit(limit)
     )
     return result.scalars().all()
 

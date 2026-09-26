@@ -55,11 +55,13 @@ interface AppState {
   plan: DailyPlan | null;
   snapshot: SnapshotData | null;
   history: HistoryData[];
+  skillAverages: Record<string, number> | null;
   
   setChild: (child: ChildProfile) => void;
   setPlan: (plan: DailyPlan) => void;
   setSnapshot: (snapshot: SnapshotData) => void;
   setHistory: (history: HistoryData[]) => void;
+  setSkillAverages: (averages: Record<string, number>) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -69,11 +71,13 @@ export const useAppStore = create<AppState>()(
       plan: null,
       snapshot: null,
       history: [],
+      skillAverages: null,
       
       setChild: (child) => set({ child }),
       setPlan: (plan) => set({ plan }),
       setSnapshot: (snapshot) => set({ snapshot }),
       setHistory: (history) => set({ history }),
+      setSkillAverages: (skillAverages) => set({ skillAverages }),
     }),
     {
       name: 'lumio-offline-storage', // The key in localStorage

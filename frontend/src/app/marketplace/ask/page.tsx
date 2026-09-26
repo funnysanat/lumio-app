@@ -82,16 +82,21 @@ export default function AskQuestionPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--background)", paddingBottom: "4rem" }}>
-      <header style={{ background: "var(--card-bg)", padding: "1.5rem 0", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 10 }}>
-        <div className="container-lg" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <Link href="/dashboard" style={{ textDecoration: "none", color: "var(--primary)", fontWeight: 600, display: "inline-block", marginBottom: "0.5rem" }}>
-              ← Back to Dashboard
-            </Link>
-            <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800 }}>Ask a Therapist</h1>
-          </div>
+      <div style={{
+        background: "var(--card)",
+        borderBottom: "1px solid var(--border)",
+        padding: "4rem 2rem",
+        textAlign: "center",
+      }}>
+        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+          <h1 style={{ margin: "0 0 1rem", fontWeight: 800, fontSize: "3rem", letterSpacing: "-0.03em", color: "var(--foreground)" }}>
+            Ask a Therapist
+          </h1>
+          <p style={{ margin: "0 auto", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1.6, maxWidth: "600px" }}>
+            Get fast answers to specific questions. Submit a question and receive a detailed, personalized answer from a verified therapist for ₹199.
+          </p>
         </div>
-      </header>
+      </div>
 
       <main className="container-lg" style={{ marginTop: "2rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
         {/* Left Column: Ask Form */}

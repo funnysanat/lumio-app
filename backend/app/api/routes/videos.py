@@ -87,6 +87,37 @@ async def record_like(
     await db.commit()
     return {"status": "success", "likes_count": video.likes_count}
 
+@router.get("/{video_id}")
+async def get_video(
+    video_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(TherapyVideo)
+        .options(selectinload(TherapyVideo.therapist))
+        .where(TherapyVideo.id == video_id)
+    )
+    video = result.scalars().first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+        
+    return {
+        "id": video.id,
+        "title": video.title,
+        "description": video.description,
+        "video_url": video.video_url,
+        "views_count": video.views_count,
+        "likes_count": video.likes_count,
+        "comments_count": video.comments_count,
+        "category": video.category,
+        "created_at": video.created_at.isoformat(),
+        "therapist": {
+            "id": video.therapist.id if video.therapist else "",
+            "full_name": video.therapist.full_name if video.therapist else "Unknown",
+            "profile_photo_url": video.therapist.profile_photo_url if video.therapist else None
+        }
+    }
+
 @router.get("/{video_id}/comments")
 async def get_comments(
     video_id: str,

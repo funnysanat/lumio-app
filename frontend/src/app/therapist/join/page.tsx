@@ -6,9 +6,9 @@ import { SignIn } from "@clerk/nextjs";
 export default function TherapistJoinPage() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "var(--background)", padding: "2rem" }}>
-      {/* Header */}
-      <div style={{ marginBottom: "2.5rem", textAlign: "center" }}>
-        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "10px", textDecoration: "none", marginBottom: "1.5rem" }}>
+      {/* Navigation Header */}
+      <div style={{ position: "absolute", top: "1.5rem", left: "2rem", right: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
             <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
@@ -16,6 +16,13 @@ export default function TherapistJoinPage() {
           </svg>
           <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--foreground)" }}>Lumio AI</span>
         </Link>
+        <Link href="/dashboard" className="btn btn-outline" style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "0.875rem", textDecoration: "none" }}>
+          ← Back to Dashboard
+        </Link>
+      </div>
+
+      {/* Hero Content */}
+      <div style={{ marginBottom: "2.5rem", textAlign: "center", marginTop: "4rem" }}>
 
         <div style={{
           display: "inline-block",

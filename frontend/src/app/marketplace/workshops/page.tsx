@@ -31,6 +31,11 @@ export default function WorkshopsPage() {
   const [enrolledSessions, setEnrolledSessions] = useState<GroupSession[]>([]);
   
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [skip, setSkip] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 20;
+
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -46,33 +51,56 @@ export default function WorkshopsPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  const fetchSessions = useCallback(async () => {
-    setLoading(true);
+  const fetchEnrolled = useCallback(async () => {
     try {
       const token = await getToken();
       const headers = { Authorization: `Bearer ${token}` };
-      
-      const [availRes, enrolledRes] = await Promise.all([
-        fetch(`${API_URL}/api/v1/marketplace/group-sessions`, { headers }),
-        fetch(`${API_URL}/api/v1/marketplace/group-sessions/my-enrollments`, { headers })
-      ]);
-      
-      if (availRes.ok) {
-        const avail = await availRes.json();
-        setAvailableSessions(avail);
-      }
-      if (enrolledRes.ok) {
-        const enrolled = await enrolledRes.json();
-        setEnrolledSessions(enrolled);
+      const res = await fetch(`${API_URL}/api/v1/marketplace/group-sessions/my-enrollments`, { headers });
+      if (res.ok) setEnrolledSessions(await res.json());
+    } catch (e) {
+      console.error(e);
+    }
+  }, [getToken, API_URL]);
+
+  const fetchAvailable = useCallback(async (reset = false) => {
+    if (reset) {
+      setLoading(true);
+      setSkip(0);
+    } else {
+      setLoadingMore(true);
+    }
+    const currentSkip = reset ? 0 : skip;
+    try {
+      const token = await getToken();
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await fetch(`${API_URL}/api/v1/marketplace/group-sessions?skip=${currentSkip}&limit=${limit}`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        if (reset) {
+          setAvailableSessions(data);
+        } else {
+          setAvailableSessions(prev => [...prev, ...data]);
+        }
+        setHasMore(data.length === limit);
+        if (!reset) {
+          setSkip(prev => prev + limit);
+        } else if (data.length === limit) {
+          setSkip(limit);
+        }
       }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [getToken, API_URL]);
+  }, [getToken, API_URL, skip]);
 
-  useEffect(() => { fetchSessions(); }, [fetchSessions]);
+  useEffect(() => { 
+    fetchAvailable(true); 
+    fetchEnrolled();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchEnrolled]);
 
   const handleEnrollClick = (s: GroupSession) => {
     setModalSession(s);
@@ -115,7 +143,8 @@ export default function WorkshopsPage() {
       
       setSuccess(`Successfully enrolled!`);
       setModalSession(null);
-      fetchSessions(); // Refresh lists
+      fetchEnrolled(); // Refresh enrolled list
+      fetchAvailable(true); // Refresh available list
       setActiveTab("enrolled"); // Switch to enrolled tab
       
       setTimeout(() => { setSuccess(null); }, 3000);
@@ -277,9 +306,7 @@ export default function WorkshopsPage() {
         textAlign: "center",
       }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-            <Link href="/dashboard" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: "1.5rem" }}>
-              <span>←</span> Back to Dashboard
-            </Link>
+
           <h1 style={{ margin: "0 0 1rem", fontWeight: 800, fontSize: "3rem", letterSpacing: "-0.03em", color: "var(--foreground)" }}>
             Workshops & Events
           </h1>
@@ -338,9 +365,22 @@ export default function WorkshopsPage() {
             </p>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "2rem" }}>
-            {displaySessions.map(s => renderCard(s, activeTab === "enrolled"))}
-          </div>
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "2rem" }}>
+              {displaySessions.map(s => renderCard(s, activeTab === "enrolled"))}
+            </div>
+            
+            {activeTab === "available" && hasMore && (
+              <div style={{ textAlign: "center", marginTop: "2rem" }}>
+                <button 
+                  onClick={() => fetchAvailable(false)} 
+                  disabled={loadingMore}
+                  style={{ padding: "0.75rem 2rem", borderRadius: "2rem", background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", cursor: "pointer", fontWeight: 700, fontSize: "1rem" }}>
+                  {loadingMore ? "Loading..." : "Load More"}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

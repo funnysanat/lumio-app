@@ -6,12 +6,13 @@ import { UserButton, useAuth } from "@clerk/nextjs";
 import SessionHistory from "./SessionHistory";
 import VisualRoadmap from "./VisualRoadmap";
 import JourneyRoadmap from "./JourneyRoadmap";
+import SkillTracker from "./SkillTracker";
 import { useAppStore } from "@/store/useAppStore";
 
 export default function ProgressPage() {
   const { getToken, userId } = useAuth();
   
-  const { child, history: cachedHistory, setHistory, setChild } = useAppStore();
+  const { child, history: cachedHistory, setHistory, setChild, setSkillAverages } = useAppStore();
   const [loading, setLoading] = useState(cachedHistory.length === 0);
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -47,6 +48,7 @@ export default function ProgressPage() {
           if (historyRes.ok) {
             const historyData = await historyRes.json();
             if (historyData.history) setHistory(historyData.history);
+            if (historyData.skill_averages) setSkillAverages(historyData.skill_averages);
           }
         } catch (err) {
           console.error("Failed to fetch history", err);
@@ -101,6 +103,11 @@ export default function ProgressPage() {
         <section style={{ marginBottom: '3rem' }}>
           <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Developmental Snapshot</h2>
           <VisualRoadmap />
+        </section>
+        
+        <section style={{ marginBottom: '3rem' }}>
+          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Targeted Skills Progress</h2>
+          <SkillTracker />
         </section>
 
         <section style={{ marginBottom: '3rem' }}>

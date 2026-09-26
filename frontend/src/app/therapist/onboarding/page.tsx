@@ -162,15 +162,22 @@ export default function TherapistOnboardingPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--background)", display: "flex", flexDirection: "column", alignItems: "center", padding: "2rem" }}>
-      {/* Logo */}
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none", marginBottom: "2rem" }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
-          <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
-          <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
-        </svg>
-        <span style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--foreground)" }}>Lumio AI — Therapist Setup</span>
-      </Link>
+      {/* Header */}
+      <div style={{ width: "100%", maxWidth: "800px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+        {/* Logo */}
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
+            <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
+            <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
+          </svg>
+          <span style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--foreground)" }}>Lumio AI — Therapist Setup</span>
+        </Link>
+        
+        <Link href="/dashboard" className="btn btn-outline" style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "0.875rem", textDecoration: "none" }}>
+          ← Back to Dashboard
+        </Link>
+      </div>
 
       {/* Step progress */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem", flexWrap: "wrap", justifyContent: "center" }}>

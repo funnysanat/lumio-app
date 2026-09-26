@@ -99,6 +99,15 @@ async def create_child_profile(
         db.add(child)
         
     current_user.role = "parent"
+    if data.city or data.pincode or data.address:
+        current_user.city = data.city
+        current_user.pincode = data.pincode
+        current_user.address = data.address
+        from app.utils.geocoder import geocode_address
+        lat, lng = await geocode_address(address=data.address or "", city=data.city or "", pincode=data.pincode or "")
+        if lat is not None and lng is not None:
+            current_user.lat = lat
+            current_user.lng = lng
     db.add(current_user)
     await db.flush() # flush to get child.id
         

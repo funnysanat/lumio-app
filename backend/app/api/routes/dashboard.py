@@ -255,4 +255,18 @@ async def get_progress_history(
     # Convert to list and sort by date descending
     history_list = sorted(list(history.values()), key=lambda x: x["date"], reverse=True)
     
-    return {"status": "success", "history": history_list}
+    # Calculate skill area aggregates
+    skill_aggregates = {}
+    for s in sessions:
+        if s.skill_area and s.independence_score is not None:
+            if s.skill_area not in skill_aggregates:
+                skill_aggregates[s.skill_area] = {"total_score": 0, "count": 0}
+            skill_aggregates[s.skill_area]["total_score"] += s.independence_score
+            skill_aggregates[s.skill_area]["count"] += 1
+
+    skill_averages = {
+        skill: round(data["total_score"] / data["count"], 2)
+        for skill, data in skill_aggregates.items()
+    }
+    
+    return {"status": "success", "history": history_list, "skill_averages": skill_averages}

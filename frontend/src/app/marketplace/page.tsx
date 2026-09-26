@@ -24,6 +24,7 @@ type Therapist = {
   offers_group_training: boolean;
   city: string | null;
   state: string | null;
+  address?: string | null;
   is_verified: boolean;
   avg_rating: number;
   total_reviews: number;
@@ -32,6 +33,7 @@ type Therapist = {
   total_videos?: number;
   total_video_views?: number;
   availability: { id: string; day_of_week: number; start_time: string; end_time: string }[];
+  distance_km?: number | null;
 };
 
 const SPEC_LABELS: Record<string, string> = {
@@ -49,32 +51,91 @@ export default function MarketplacePage() {
   const { getToken } = useAuth();
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
+  const [pincode, setPincode] = useState("");
   const [mode, setMode] = useState("");
   const [spec, setSpec] = useState("");
+  const [skip, setSkip] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 20;
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  const fetchTherapists = useCallback(async () => {
-    setLoading(true);
+  const fetchTherapists = useCallback(async (reset = false) => {
+    if (reset) {
+      setLoading(true);
+      setSkip(0);
+    } else {
+      setLoadingMore(true);
+    }
+    const currentSkip = reset ? 0 : skip;
     try {
       const token = await getToken();
       const params = new URLSearchParams();
       if (city.trim()) params.set("city", city.trim());
+      if (address.trim()) params.set("address", address.trim());
+      if (pincode.trim()) params.set("pincode", pincode.trim());
       if (mode) params.set("mode", mode);
       if (spec) params.set("specialisation", spec);
+      params.set("skip", currentSkip.toString());
+      params.set("limit", limit.toString());
+      
       const res = await fetch(`${API_URL}/api/v1/marketplace/search?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTherapists(await res.json());
+      const data = await res.json();
+      
+      if (reset) {
+        setTherapists(data);
+      } else {
+        setTherapists(prev => [...prev, ...data]);
+      }
+      setHasMore(data.length === limit);
+      if (!reset) {
+        setSkip(prev => prev + limit);
+      } else if (data.length === limit) {
+        setSkip(limit);
+      }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [city, mode, spec]);
+  }, [city, address, pincode, mode, spec, skip, getToken, API_URL]);
+  useEffect(() => {
+    let mounted = true;
+    const fetchProfileLocation = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res = await fetch(`${API_URL}/api/v1/users/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok && mounted) {
+          const user = await res.json();
+          if (user.city) setCity(user.city);
+          if (user.address) setAddress(user.address);
+          if (user.pincode) setPincode(user.pincode);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchProfileLocation();
+    return () => { mounted = false; };
+  }, [getToken, API_URL]);
 
-  useEffect(() => { fetchTherapists(); }, [fetchTherapists]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTherapists(true);
+    }, 600);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [city, address, pincode, mode, spec]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--background)", paddingBottom: "4rem" }}>
@@ -85,9 +146,6 @@ export default function MarketplacePage() {
         padding: "3rem 2rem 2rem",
         textAlign: "center",
       }}>
-        <Link href="/dashboard" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: "1.5rem" }}>
-          <span>←</span> Back to Dashboard
-        </Link>
         <h1 style={{ margin: "0 0 0.5rem", fontWeight: 800, fontSize: "2.25rem", lineHeight: 1.2 }}>
           Find a Therapist
         </h1>
@@ -96,13 +154,27 @@ export default function MarketplacePage() {
         </p>
 
         {/* Filters */}
-        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", maxWidth: "700px", margin: "0 auto" }}>
+        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", maxWidth: "900px", margin: "0 auto" }}>
           <input
-            placeholder="🏙 City (e.g. Bengaluru)"
+            placeholder="🏙 City"
             value={city}
             onChange={e => setCity(e.target.value)}
             onKeyDown={e => e.key === "Enter" && fetchTherapists()}
-            style={{ padding: "0.75rem 1.25rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "0.95rem", minWidth: "200px" }}
+            style={{ padding: "0.75rem 1.25rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "0.95rem", minWidth: "120px", flex: 1 }}
+          />
+          <input
+            placeholder="📍 Address"
+            value={address}
+            onChange={e => setAddress(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && fetchTherapists()}
+            style={{ padding: "0.75rem 1.25rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "0.95rem", minWidth: "150px", flex: 2 }}
+          />
+          <input
+            placeholder="📮 Pincode"
+            value={pincode}
+            onChange={e => setPincode(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && fetchTherapists()}
+            style={{ padding: "0.75rem 1.25rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", outline: "none", fontSize: "0.95rem", minWidth: "100px", flex: 1 }}
           />
           <select value={mode} onChange={e => setMode(e.target.value)}
             style={{ padding: "0.75rem 1.25rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "var(--card)", color: mode ? "var(--foreground)" : "var(--muted-foreground)", outline: "none", fontSize: "0.95rem", cursor: "pointer" }}>
@@ -115,7 +187,7 @@ export default function MarketplacePage() {
             <option value="">All specialisations</option>
             {Object.entries(SPEC_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
-          <button onClick={fetchTherapists}
+          <button onClick={() => fetchTherapists(true)}
             style={{ padding: "0.75rem 1.5rem", borderRadius: "2rem", background: "var(--primary)", color: "white", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "0.95rem" }}>
             Search
           </button>
@@ -141,10 +213,21 @@ export default function MarketplacePage() {
               {therapists[0]?.match_score !== null ? " · sorted by match score" : ""}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {therapists.map(t => (
-                <TherapistCard key={t.id} therapist={t} />
+              {therapists.map((t, i) => (
+                <TherapistCard key={`${t.id}-${i}`} therapist={t} />
               ))}
             </div>
+            
+            {hasMore && (
+              <div style={{ textAlign: "center", marginTop: "2rem" }}>
+                <button 
+                  onClick={() => fetchTherapists(false)} 
+                  disabled={loadingMore}
+                  style={{ padding: "0.75rem 2rem", borderRadius: "2rem", background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", cursor: "pointer", fontWeight: 700, fontSize: "1rem" }}>
+                  {loadingMore ? "Loading..." : "Load More"}
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -211,7 +294,11 @@ function TherapistCard({ therapist: t }: { therapist: Therapist }) {
 
           <div style={{ display: "flex", gap: "1.25rem", fontSize: "0.83rem", color: "var(--muted-foreground)", flexWrap: "wrap" }}>
             <span>🎓 {t.experience_years}y exp</span>
-            {t.city && <span>📍 {t.city}</span>}
+            {(t.city || t.address) && (
+              <span>
+                📍 {t.address ? `${t.address}, ` : ""}{t.city} {t.distance_km !== undefined && t.distance_km !== null ? `(${t.distance_km < 1 ? "< 1" : Math.round(t.distance_km)} km away)` : ""}
+              </span>
+            )}
             <span>🗣 {t.languages.slice(0, 2).join(", ")}</span>
             {t.avg_rating > 0 && <span>⭐ {t.avg_rating.toFixed(1)} ({t.total_reviews})</span>}
             {availDays.length > 0 && <span>📅 {availDays.join(", ")}</span>}

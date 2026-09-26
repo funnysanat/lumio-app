@@ -17,6 +17,8 @@ async def log_session(
     activity_id: str = Form(...),
     response: str = Form(...),
     text_note: str = Form(None),
+    skill_area: str = Form(None),
+    independence_score: int = Form(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -33,6 +35,8 @@ async def log_session(
         child_id=child.id,
         activity_id=activity_id,
         response=response,
+        skill_area=skill_area,
+        independence_score=independence_score,
         text_note=text_note,
         voice_note_url=voice_note_url,
         ai_summary=ai_summary

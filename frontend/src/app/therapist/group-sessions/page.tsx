@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -102,19 +102,36 @@ export default function TherapistGroupSessionsPage() {
   const fmt = (paise: number) => paise > 0 ? `₹${(paise / 100).toLocaleString("en-IN")}` : "Free";
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--background)", padding: "2rem" }}>
-      <div style={{ maxWidth: "1000px", margin: "0 auto", marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/therapist/dashboard" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-          <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--foreground)" }}>← Back to Dashboard</span>
+    <div style={{ minHeight: "100vh", background: "var(--background)", paddingBottom: "4rem" }}>
+      {/* Top bar Header */}
+      <div style={{ borderBottom: "1px solid var(--border)", background: "var(--card)", padding: "1rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
+            <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
+            <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
+          </svg>
+          <span style={{ fontWeight: 700, color: "var(--foreground)" }}>Lumio AI</span>
+          <span style={{ color: "var(--muted-foreground)", fontSize: "0.85rem" }}>/ Workshops</span>
         </Link>
-        <button onClick={() => setShowModal(true)} style={{ padding: "0.75rem 1.5rem", borderRadius: "0.5rem", background: "var(--primary)", color: "white", border: "none", cursor: "pointer", fontWeight: 700 }}>
-          + Schedule Workshop
-        </button>
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <Link href="/therapist/dashboard" style={{ padding: "0.5rem 1rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "white", color: "var(--foreground)", textDecoration: "none", fontSize: "0.875rem", fontWeight: 600 }}>
+            ← Back to Dashboard
+          </Link>
+          <UserButton />
+        </div>
       </div>
 
-      <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-        <h1 style={{ marginBottom: "0.5rem", fontSize: "1.8rem" }}>Group Sessions & Workshops</h1>
-        <p style={{ color: "var(--muted-foreground)", marginBottom: "2rem" }}>Manage your upcoming group training events and caregiver workshops.</p>
+      <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "0 2rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: "1.8rem" }}>Group Sessions & Workshops</h1>
+            <p style={{ color: "var(--muted-foreground)", margin: "0.5rem 0 0 0" }}>Manage your upcoming group training events and caregiver workshops.</p>
+          </div>
+          <button onClick={() => setShowModal(true)} style={{ padding: "0.75rem 1.5rem", borderRadius: "0.5rem", background: "var(--primary)", color: "white", border: "none", cursor: "pointer", fontWeight: 700, flexShrink: 0 }}>
+            + Schedule Workshop
+          </button>
+        </div>
 
         {loading ? (
           <div style={{ textAlign: "center", padding: "4rem", color: "var(--muted-foreground)" }}>Loading...</div>

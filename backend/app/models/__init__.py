@@ -6,3 +6,4 @@ from app.models.activity import DailyPlan, ActivitySession
 from app.models.youtube_video import CuratedYouTubeVideo
 from app.models.consultation import MicroConsultation
 from app.models.therapist import TherapistProfile, TherapistAvailability, TherapistBooking, TherapistReview
+from app.models.coaching import CoachingMessage
