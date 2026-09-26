@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, JSON, Text
+from sqlalchemy import Column, String, DateTime, ForeignKey, JSON, Text, Integer
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
@@ -29,6 +29,8 @@ class ActivitySession(Base):
     goal_id = Column(String, ForeignKey("therapy_goals.id"), nullable=True)
     
     response = Column(String, nullable=False) # 'independent', 'prompted', 'refused'
+    skill_area = Column(String, nullable=True) # e.g., 'fine_motor'
+    independence_score = Column(Integer, nullable=True) # 0-4 scale
     text_note = Column(String, nullable=True)
     voice_note_url = Column(String, nullable=True)
     ai_summary = Column(Text, nullable=True)

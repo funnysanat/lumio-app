@@ -86,6 +86,14 @@ async def onboard_therapist(
         address=payload.address,
         is_listing_active=True,   # Active by default; admin can deactivate
     )
+    
+    if payload.city or payload.pincode or payload.address:
+        from app.utils.geocoder import geocode_address
+        lat, lng = await geocode_address(address=payload.address or "", city=payload.city or "", pincode=payload.pincode or "")
+        if lat is not None and lng is not None:
+            profile.lat = lat
+            profile.lng = lng
+            
     db.add(profile)
     current_user.role = "therapist"
     db.add(current_user)
@@ -134,10 +142,23 @@ async def update_my_profile(
         raise HTTPException(status_code=404, detail="Therapist profile not found.")
 
     update_data = payload.model_dump(exclude_unset=True)
+    needs_geocoding = any(field in update_data for field in ["city", "pincode", "address"])
+    
     for field, value in update_data.items():
         if field in ("qualifications", "certifications") and value is not None:
             value = [item.model_dump() if hasattr(item, "model_dump") else item for item in value]
         setattr(profile, field, value)
+
+    if needs_geocoding:
+        from app.utils.geocoder import geocode_address
+        lat, lng = await geocode_address(
+            address=profile.address or "", 
+            city=profile.city or "", 
+            pincode=profile.pincode or ""
+        )
+        if lat is not None and lng is not None:
+            profile.lat = lat
+            profile.lng = lng
 
     await db.commit()
     await db.refresh(profile)

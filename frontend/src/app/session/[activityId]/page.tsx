@@ -9,6 +9,39 @@ import { useAuth } from "@clerk/nextjs";
 import { UI_STRINGS } from '@/utils/i18n';
 import InteractiveGame from '@/components/InteractiveGame';
 
+const SessionHeader = ({ children }: { children?: React.ReactNode }) => (
+  <header
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: "64px",
+      backgroundColor: "var(--card-bg)",
+      borderBottom: "1px solid var(--border)",
+      display: "flex",
+      alignItems: "center",
+      padding: "0 1.5rem",
+      zIndex: 50,
+      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+      justifyContent: "space-between"
+    }}
+  >
+    <Link 
+      href="/dashboard" 
+      className="btn btn-outline" 
+      onClick={() => window.speechSynthesis.cancel()}
+      style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "0.875rem", textDecoration: "none" }}
+    >
+      ← Back to Dashboard
+    </Link>
+    <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "var(--foreground)", position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
+      Activity Session
+    </h1>
+    <div style={{ width: "200px", display: "flex", justifyContent: "flex-end" }}>{children}</div>
+  </header>
+);
+
 export default function SessionPage({ params }: { params: Promise<{ activityId: string }> }) {
   const resolvedParams = use(params);
   const activityId = resolvedParams.activityId;
@@ -22,6 +55,7 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
   const [engagementMode, setEngagementMode] = useState<'game' | 'music'>('game');
   const [showQR, setShowQR] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [selectedResponse, setSelectedResponse] = useState<string>('');
 
   // WebSocket Connection
   useEffect(() => {
@@ -63,6 +97,50 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
   // Activity Data State
   const [activity, setActivity] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Track domain
+  const [domain, setDomain] = useState<'aba' | 'ot_pt' | 'speech' | 'sped'>('aba');
+
+  // Auto-detect domain when activity loads
+  useEffect(() => {
+    if (activity) {
+      const q = (activity.video_search_query || activity.goal || '').toLowerCase();
+      if (q.includes('speech') || q.includes('language') || q.includes('say') || q.includes('word') || q.includes('articulation')) setDomain('speech');
+      else if (q.includes('occupational') || q.includes('fine motor') || q.includes('gross motor') || q.includes('ot') || q.includes('physical') || q.includes('pt')) setDomain('ot_pt');
+      else if (q.includes('special ed') || q.includes('academic') || q.includes('math') || q.includes('reading') || q.includes('school')) setDomain('sped');
+      else setDomain('aba');
+    }
+  }, [activity]);
+
+  const DOMAIN_PROMPTS = {
+    aba: [
+      { label: "Independent", value: "independent", desc: "Completed without any help" },
+      { label: "Gestural Prompt", value: "gestural", desc: "Pointed or gestured to guide them" },
+      { label: "Verbal Prompt", value: "verbal", desc: "Gave a verbal hint or instruction" },
+      { label: "Physical Prompt", value: "physical", desc: "Guided them physically (hand-over-hand)" },
+      { label: "No Response / Refused", value: "refused", desc: "Did not attempt the activity" }
+    ],
+    ot_pt: [
+      { label: "Independent", value: "independent", desc: "No physical assistance needed" },
+      { label: "Supervision", value: "supervision", desc: "Required standby supervision or cues" },
+      { label: "Minimal Assist", value: "min_assist", desc: "Child did >75% of the work" },
+      { label: "Moderate Assist", value: "mod_assist", desc: "Child did ~50% of the work" },
+      { label: "Max/Total Assist", value: "max_assist", desc: "Caregiver did >75% of the work" }
+    ],
+    speech: [
+      { label: "Spontaneous", value: "spontaneous", desc: "Said/did it without being asked" },
+      { label: "Independent", value: "independent", desc: "Responded correctly to a cue" },
+      { label: "Imitated", value: "imitated", desc: "Copied what the caregiver said" },
+      { label: "Prompted", value: "prompted", desc: "Needed a hint or partial word" },
+      { label: "No Response", value: "refused", desc: "Did not respond" }
+    ],
+    sped: [
+      { label: "Independent", value: "independent", desc: "Completed task alone" },
+      { label: "With Guidance", value: "guidance", desc: "Completed with some support" },
+      { label: "Emerging", value: "emerging", desc: "Tried but could not complete" },
+      { label: "Not Attempted", value: "refused", desc: "Did not attempt" }
+    ]
+  };
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   // Fetch Activity Data
@@ -94,11 +172,16 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
 
   // Handle responsive behavior & roles
   useEffect(() => {
-    if (role === 'child') {
-      setViewMode('child');
-    } else if (role === 'parent') {
-      setViewMode('parent');
-    } else {
+    // Avoid synchronous state updates inside effect
+    setTimeout(() => {
+      if (role === 'child') {
+        setViewMode('child');
+      } else if (role === 'parent') {
+        setViewMode('parent');
+      }
+    }, 0);
+
+    if (role !== 'child' && role !== 'parent') {
       const handleResize = () => {
         if (window.innerWidth < 768) {
           setViewMode('parent');
@@ -124,6 +207,26 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
       const formData = new FormData();
       formData.append('activity_id', activityId);
       formData.append('response', responseType);
+      
+      const SCORE_MAP: Record<string, number> = {
+        'independent': 4,
+        'spontaneous': 4,
+        'gestural': 3,
+        'supervision': 3,
+        'imitated': 3,
+        'guidance': 3,
+        'verbal': 2,
+        'min_assist': 2,
+        'prompted': 2,
+        'physical': 1,
+        'mod_assist': 1,
+        'max_assist': 1,
+        'refused': 0,
+        'emerging': 0
+      };
+      
+      formData.append('independence_score', (SCORE_MAP[responseType] ?? 0).toString());
+      formData.append('skill_area', activity?.skill_area || 'cognitive');
       
       if (textNote.trim()) {
         formData.append('text_note', textNote.trim());
@@ -223,8 +326,10 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
     };
 
     return (
-      <div className="page-wrapper container-md animate-fade-in" style={{ textAlign: 'center' }}>
-        <h1>{activity.title}</h1>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+        <SessionHeader />
+        <div className="page-wrapper container-sm animate-fade-in" style={{ textAlign: 'center', paddingTop: '100px' }}>
+          <h1>{activity.title}</h1>
         <p style={{ color: '#a1a1aa', fontSize: '1.25rem', marginBottom: '2rem' }}>
           Goal: {activity.goal}
         </p>
@@ -288,24 +393,17 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
             </div>
           )}
         </div>
-        <button className="btn btn-primary" onClick={() => { window.speechSynthesis.cancel(); updateSessionState('active'); }} style={{ width: '100%', padding: '1rem', fontSize: '1.25rem' }}>
+        <button className="btn btn-primary" onClick={() => { window.speechSynthesis.cancel(); updateSessionState('active'); }} style={{ padding: '0.75rem 2rem', fontSize: '1rem', borderRadius: '2rem' }}>
           {t.startBtn}
         </button>
-        <Link href="/dashboard" onClick={() => window.speechSynthesis.cancel()} style={{ display: 'block', marginTop: '1rem', color: '#a1a1aa' }}>
-          {t.cancel}
-        </Link>
       </div>
+    </div>
     );
   }
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--background)' }}>
-      {/* Top Bar for Mobile Toggle */}
-      <div style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--card-bg)' }}>
-        <Link href="/dashboard" className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
-          End Session
-        </Link>
-        
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--background)', paddingTop: '64px' }}>
+      <SessionHeader>
         {/* Only show toggle on mobile/tablet */}
         <div className="mobile-toggle" style={{ display: 'flex', gap: '0.5rem' }}>
           <button 
@@ -313,17 +411,17 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
             onClick={() => setViewMode('parent')}
             style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}
           >
-            Coaching View
+            Coaching
           </button>
           <button 
             className={`btn ${viewMode === 'child' ? 'btn-primary' : 'btn-outline'}`} 
             onClick={() => setViewMode('child')}
             style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}
           >
-            Child View
+            Child
           </button>
         </div>
-      </div>
+      </SessionHeader>
 
       {/* Split Screen Layout */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -343,18 +441,69 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
 
               {sessionState === 'active' ? (
                 <div>
-                  <h3 style={{ marginBottom: '1rem', fontSize: '1rem', color: '#64748b' }}>{t.howDidChildRespond}</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <button className="btn btn-response-success" onClick={() => handleResponse('Independent')}>
-                      🌟 {t.saidItAlone}
-                    </button>
-                    <button className="btn btn-response-warning" onClick={() => handleResponse('Prompted')}>
-                      🤝 {t.neededHelp}
-                    </button>
-                    <button className="btn btn-response-danger" onClick={() => handleResponse('No Response')}>
-                      🌱 {t.didntDoIt}
-                    </button>
+                  <h3 style={{ marginBottom: '1rem', fontSize: '1rem', color: '#64748b' }}>
+                    How did your child respond?
+                  </h3>
+                  
+                  {/* Domain Selector */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                    {[
+                      { id: 'aba', label: 'ABA / Behavior' },
+                      { id: 'ot_pt', label: 'OT / PT' },
+                      { id: 'speech', label: 'Speech' },
+                      { id: 'sped', label: 'Special Ed' }
+                    ].map(d => (
+                      <button 
+                        key={d.id}
+                        onClick={() => setDomain(d.id as any)}
+                        style={{ 
+                          padding: '0.4rem 0.8rem', fontSize: '0.8rem', borderRadius: '2rem', flexShrink: 0,
+                          border: `1px solid ${domain === d.id ? 'var(--primary)' : 'var(--border)'}`,
+                          background: domain === d.id ? 'rgba(99,102,241,0.1)' : 'var(--card)',
+                          color: domain === d.id ? 'var(--primary)' : 'var(--muted-foreground)',
+                          fontWeight: domain === d.id ? 700 : 500, cursor: 'pointer'
+                        }}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
                   </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {DOMAIN_PROMPTS[domain].map((prompt) => (
+                      <label 
+                        key={prompt.value} 
+                        style={{ 
+                          display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', 
+                          border: `1px solid ${selectedResponse === prompt.value ? 'var(--primary)' : 'var(--border)'}`, 
+                          borderRadius: '0.5rem', cursor: 'pointer',
+                          background: selectedResponse === prompt.value ? 'rgba(99,102,241,0.05)' : 'var(--card)'
+                        }}
+                      >
+                        <input 
+                          type="radio" 
+                          name="response" 
+                          value={prompt.value} 
+                          checked={selectedResponse === prompt.value}
+                          onChange={() => setSelectedResponse(prompt.value)}
+                          style={{ accentColor: 'var(--primary)', width: '1.25rem', height: '1.25rem' }}
+                        />
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--foreground)' }}>{prompt.label}</span>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>{prompt.desc}</span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={() => handleResponse(selectedResponse)} 
+                    disabled={!selectedResponse}
+                    style={{ width: '100%', marginTop: '1.5rem', padding: '1rem', fontSize: '1rem', opacity: selectedResponse ? 1 : 0.5 }}
+                  >
+                    Save & Continue
+                  </button>
                 </div>
               ) : (
                   <div className="animate-fade-in" style={{ textAlign: 'center', padding: '2rem 0' }}>
@@ -434,13 +583,61 @@ export default function SessionPage({ params }: { params: Promise<{ activityId: 
                       <div style={{ backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '0.5rem', fontSize: '1.25rem', border: '1px solid #e2e8f0' }}>⏸️</div>
                       <div>
                         <strong style={{ display: 'block', color: '#334155', marginBottom: '0.25rem' }}>Take a Break</strong>
-                        <span style={{ color: '#64748b', fontSize: '0.875rem' }}>It's always better to end on a positive note and try again later.</span>
+                        <span style={{ color: '#64748b', fontSize: '0.875rem' }}>It&apos;s always better to end on a positive note and try again later.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
+                    <h5 style={{ margin: '0 0 1rem 0', color: '#334155', fontSize: '1rem' }}>Need personalized guidance?</h5>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {/* Ask a Therapist (Microconsultations) */}
+                      <div style={{ 
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                        padding: '1rem', backgroundColor: 'rgba(99, 102, 241, 0.05)', 
+                        border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '0.5rem'
+                      }}>
+                        <div>
+                          <strong style={{ display: 'block', color: 'var(--primary)', marginBottom: '0.25rem', fontSize: '0.9rem' }}>
+                            Ask a Therapist
+                          </strong>
+                          <span style={{ color: '#64748b', fontSize: '0.8rem' }}>Get an immediate solution from a certified professional.</span>
+                        </div>
+                        <button 
+                          className="btn btn-primary" 
+                          onClick={() => router.push('/marketplace/ask')}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                        >
+                          Ask Now
+                        </button>
+                      </div>
+
+                      {/* Premier Plan Upsell */}
+                      <div style={{ 
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                        padding: '1rem', backgroundColor: '#f8fafc', 
+                        border: '1px solid #e2e8f0', borderRadius: '0.5rem'
+                      }}>
+                        <div>
+                          <strong style={{ display: 'block', color: '#334155', marginBottom: '0.25rem', fontSize: '0.9rem' }}>
+                            Upgrade to Premier
+                          </strong>
+                          <span style={{ color: '#64748b', fontSize: '0.8rem' }}>Get a dedicated coach, customized therapy plans, and unlimited 1-on-1 support.</span>
+                        </div>
+                        <button className="btn btn-outline" onClick={() => router.push('/pricing')} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                          View Plans
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <button className="btn btn-struggle" onClick={() => setShowStruggleTips(true)}>
+                <button 
+                  className="btn btn-response-danger" 
+                  onClick={() => setShowStruggleTips(true)}
+                  style={{ width: '100%', padding: '1rem', fontSize: '1.125rem', fontWeight: 'bold' }}
+                >
                   {t.childStruggling}
                 </button>
               )}

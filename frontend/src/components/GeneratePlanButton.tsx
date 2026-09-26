@@ -120,7 +120,7 @@ export default function GeneratePlanButton({
           </h2>
           
           <p style={{ color: '#475569', fontSize: '1.25rem', textAlign: 'center', maxWidth: '450px', lineHeight: 1.6, padding: '0 1.5rem' }}>
-            Our AI is carefully curating a fresh, personalized therapy plan tailored specifically to your child's needs today.
+            Our AI is carefully curating a fresh, personalized therapy plan tailored specifically to your child&apos;s needs today.
           </p>
         </div>
       )}

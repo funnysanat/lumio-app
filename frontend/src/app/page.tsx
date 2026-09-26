@@ -17,8 +17,8 @@ export default async function Home() {
           Lumio AI
         </Link>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <Link href="/therapist/join" style={{ fontSize: "0.9rem", color: "var(--muted-foreground)", textDecoration: "none", fontWeight: 500 }}>
-            For Therapists
+          <Link href="/pricing" style={{ color: "var(--foreground)", textDecoration: "none", fontWeight: 500, marginRight: '1rem' }}>
+            Pricing
           </Link>
           {userId ? (
             <UserButton />

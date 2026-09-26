@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { UserButton, useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -61,6 +61,14 @@ export default function DashboardPage() {
   const [videos, setVideos] = useState<any[]>([]);
   const [myBookings, setMyBookings] = useState<any[]>([]);
   const [myEnrollments, setMyEnrollments] = useState<any[]>([]);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = 300;
+      carouselRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
+  };
   const [loading, setLoading] = useState(!cachedPlan);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [hasMounted, setHasMounted] = useState(false);
@@ -182,6 +190,13 @@ export default function DashboardPage() {
           <Link href="/dashboard/feed" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Therapy Videos</Link>
           <Link href="/dashboard/progress" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Progress</Link>
           <Link href="/settings" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Settings</Link>
+          <Link href="/pricing" style={{ 
+            color: 'white', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none',
+            background: 'linear-gradient(135deg, #38bdf8 0%, #a78bfa 100%)', 
+            padding: '0.4rem 0.8rem', borderRadius: '1rem', marginLeft: '0.5rem'
+          }}>
+            Upgrade
+          </Link>
           
           <div style={{ marginLeft: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <NotificationBell />
@@ -266,16 +281,34 @@ export default function DashboardPage() {
               <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Trending Therapy Videos</h2>
               <Link href="/dashboard/feed" style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none' }}>View All →</Link>
             </div>
-            <div style={{ 
-              display: 'flex', 
-              gap: '1rem', 
-              overflowX: 'auto', 
-              paddingBottom: '1rem',
-              scrollbarWidth: 'none', // Firefox
-              WebkitOverflowScrolling: 'touch' 
-            }}
-            className="hide-scrollbar"
-            >
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => scrollCarousel('left')}
+                style={{ position: 'absolute', left: '-15px', top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: '40px', height: '40px', borderRadius: '50%', background: 'white', border: '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--foreground)' }}
+              >
+                ❮
+              </button>
+              <button 
+                onClick={() => scrollCarousel('right')}
+                style={{ position: 'absolute', right: '-15px', top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: '40px', height: '40px', borderRadius: '50%', background: 'white', border: '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--foreground)' }}
+              >
+                ❯
+              </button>
+              <div 
+                ref={carouselRef}
+                style={{ 
+                  display: 'flex', 
+                  gap: '1rem', 
+                  overflowX: 'auto', 
+                  paddingBottom: '1rem',
+                  paddingLeft: '1rem',
+                  paddingRight: '1rem',
+                  margin: '0 -1rem', // Counteract padding for full width scrolling effect
+                  scrollbarWidth: 'none', // Firefox
+                  WebkitOverflowScrolling: 'touch' 
+                }}
+                className="hide-scrollbar"
+              >
               {videos.map((vid: any, i: number) => {
                 const dummyImages = [
                   "https://images.unsplash.com/photo-1576426863848-c21f53c60b19?w=400&q=80", // Child building blocks
@@ -287,7 +320,7 @@ export default function DashboardPage() {
                 const bgImage = dummyImages[i % dummyImages.length];
                 
                 return (
-                <Link key={vid.id} href={`/dashboard/feed`} style={{ textDecoration: 'none' }}>
+                <Link key={vid.id} href={`/dashboard/feed/${vid.id}`} style={{ textDecoration: 'none' }}>
                   <div style={{
                     minWidth: '220px',
                     width: '220px',
@@ -322,6 +355,7 @@ export default function DashboardPage() {
                 </Link>
                 );
               })}
+              </div>
             </div>
           </div>
         )}
@@ -414,7 +448,7 @@ export default function DashboardPage() {
           </Link>
 
           {/* Ask a Therapist */}
-          <Link href="/dashboard/ask" style={{ textDecoration: 'none', display: 'block' }}>
+          <Link href="/marketplace/ask" style={{ textDecoration: 'none', display: 'block' }}>
             <div style={{
               background: 'linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(56,189,248,0.08) 100%)',
               border: '1px solid rgba(34,197,94,0.25)',

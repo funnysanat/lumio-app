@@ -6,6 +6,9 @@ class ChildProfileCreate(BaseModel):
     date_of_birth: str # Format: YYYY-MM-DD
     communication_level: str
     preferred_language: str
+    city: Optional[str] = None
+    pincode: Optional[str] = None
+    address: Optional[str] = None
     checked_milestone_ids: List[str] = []
 
 class TherapyGoalCreate(BaseModel):

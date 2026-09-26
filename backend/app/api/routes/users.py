@@ -23,3 +23,25 @@ async def get_user_role(
 async def debug_env():
     from app.core.config import settings
     return {"CLERK_SECRET_KEY": settings.CLERK_SECRET_KEY}
+
+class UserProfileResponse(BaseModel):
+    id: str
+    email: str
+    role: Optional[str] = None
+    city: Optional[str] = None
+    address: Optional[str] = None
+    pincode: Optional[str] = None
+
+@router.get("/me", response_model=UserProfileResponse)
+async def get_user_profile(
+    current_user: User = Depends(get_current_user)
+):
+    """Get the full profile of the current user."""
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "role": current_user.role,
+        "city": current_user.city,
+        "address": current_user.address,
+        "pincode": current_user.pincode
+    }

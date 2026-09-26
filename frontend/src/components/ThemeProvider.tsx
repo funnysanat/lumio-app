@@ -19,8 +19,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Read from local storage on mount
     const savedTheme = localStorage.getItem('app-theme') as Theme;
     if (savedTheme) {
-      setThemeState(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
+      // Use setTimeout to avoid synchronous state update during render
+      setTimeout(() => setThemeState(savedTheme), 0);
     } else {
       document.documentElement.setAttribute('data-theme', 'rose');
     }

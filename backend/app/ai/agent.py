@@ -25,6 +25,7 @@ class Activity(BaseModel):
     id: str = Field(description="A unique string ID like act_1, act_2")
     title: str = Field(description="Short engaging title of the activity")
     goal: str = Field(description="The therapy goal this activity targets")
+    skill_area: str = Field(description="The core developmental skill area targeted. Must be one of: 'fine_motor', 'gross_motor', 'social_skills', 'expressive_language', 'receptive_language', 'self_care', 'cognitive', 'behavioral'.", default="cognitive")
     duration: str = Field(description="Estimated duration (e.g. '5 mins')")
     difficulty: str = Field(description="Difficulty level (e.g. 'Beginner', 'Building', 'Advanced')")
     reason: str = Field(description="A one-line explanation of why this activity was chosen today for this specific child")

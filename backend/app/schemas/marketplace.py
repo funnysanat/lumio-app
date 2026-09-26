@@ -57,6 +57,10 @@ class TherapistUpdateRequest(BaseModel):
     session_duration_mins: Optional[int] = None
     session_price_online: Optional[int] = None
     session_price_offline: Optional[int] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    pincode: Optional[str] = None
+    address: Optional[str] = None
     offers_child_therapy: Optional[bool] = None
     offers_caregiver_training: Optional[bool] = None
     offers_group_training: Optional[bool] = None
@@ -160,6 +164,7 @@ class TherapistPublicResponse(BaseModel):
     group_price_offline: Optional[int] = None
     city: Optional[str]
     state: Optional[str]
+    address: Optional[str] = None
     is_verified: bool
     avg_rating: float
     total_reviews: int
@@ -168,6 +173,7 @@ class TherapistPublicResponse(BaseModel):
     total_video_views: Optional[int] = 0
     availability: List[AvailabilitySlotResponse] = []
     match_score: Optional[float] = None   # computed per search query
+    distance_km: Optional[float] = None
 
     class Config:
         from_attributes = True

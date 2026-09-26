@@ -47,8 +47,10 @@ export default function InteractiveGame({ emoji }: InteractiveGameProps) {
     if (score > 0 && score % 50 === 0) {
       const messages = ["Great job! 🌟", "You are amazing! 🎈", "Wow! Keep going! 🎉", "Fantastic! ✨"];
       const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-      setMotivationMessage(randomMsg);
-      setShowBanner(true);
+      setTimeout(() => {
+        setMotivationMessage(randomMsg);
+        setShowBanner(true);
+      }, 0);
     }
   }, [score]);
 

@@ -48,6 +48,9 @@ export default function ChildProfilePage() {
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [communicationLevel, setCommunicationLevel] = useState('');
   const [preferredLanguage, setPreferredLanguage] = useState('English');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [pincode, setPincode] = useState('');
   const [checkedMilestones, setCheckedMilestones] = useState<string[]>([]);
 
   const [step, setStep] = useState(1);
@@ -72,6 +75,17 @@ export default function ChildProfilePage() {
             setCommunicationLevel(json.child.communication_level || '');
             setPreferredLanguage(json.child.preferred_language || 'English');
           }
+        }
+        
+        // Fetch Parent Profile for Location
+        const userRes = await fetch(`${API_URL}/api/v1/users/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (userRes.ok) {
+          const user = await userRes.json();
+          if (user.city) setCity(user.city);
+          if (user.address) setAddress(user.address);
+          if (user.pincode) setPincode(user.pincode);
         }
         
         // Fetch Assessment for checkboxes
@@ -152,6 +166,9 @@ export default function ChildProfilePage() {
       date_of_birth: dateOfBirth, // YYYY-MM
       communication_level: communicationLevel,
       preferred_language: preferredLanguage,
+      address: address,
+      city: city,
+      pincode: pincode,
       checked_milestone_ids: checkedMilestones
     };
 
@@ -243,6 +260,22 @@ export default function ChildProfilePage() {
                   <option value="Tamil">Tamil (தமிழ்)</option>
                   <option value="Arabic">Arabic (العربية)</option>
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Street Address</label>
+                <textarea rows={2} className="form-input" placeholder="e.g. 123 MG Road" value={address} onChange={e => setAddress(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">City</label>
+                <input type="text" className="form-input" placeholder="e.g. Bengaluru" value={city} onChange={e => setCity(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Pincode</label>
+                <input type="text" className="form-input" placeholder="e.g. 560001" value={pincode} onChange={e => setPincode(e.target.value)} required />
+                <span style={{ fontSize: '0.75rem', color: '#a1a1aa', marginTop: '0.25rem', display: 'block' }}>We use this to find therapists near you.</span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>

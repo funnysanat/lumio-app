@@ -203,13 +203,6 @@ export default function TherapistProfilePage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--background)", paddingBottom: "6rem" }}>
-      {/* Nav */}
-      <div style={{ borderBottom: "1px solid var(--border)", background: "var(--card)", padding: "1rem 2rem" }}>
-        <Link href="/marketplace" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span>←</span> Back to Marketplace
-        </Link>
-      </div>
-
       <div style={{ maxWidth: "820px", margin: "0 auto", padding: "2rem" }}>
         {/* Profile header */}
         <div className="card" style={{ padding: "2rem", marginBottom: "1.5rem" }}>
@@ -342,10 +335,15 @@ export default function TherapistProfilePage() {
 
         {/* Book button — sticky or inline */}
         {!showBooking && !booked && (
-          <button onClick={() => setShowBooking(true)}
-            style={{ width: "100%", padding: "1rem", borderRadius: "1rem", background: "var(--primary)", color: "white", border: "none", cursor: "pointer", fontWeight: 800, fontSize: "1.05rem", boxShadow: "0 4px 20px rgba(99,102,241,0.3)" }}>
-            Request a Session
-          </button>
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <Link href="/marketplace" style={{ flex: 1, padding: "1rem", borderRadius: "1rem", background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", cursor: "pointer", fontWeight: 800, fontSize: "1.05rem", textDecoration: "none", textAlign: "center" }}>
+              Cancel
+            </Link>
+            <button onClick={() => setShowBooking(true)}
+              style={{ flex: 2, padding: "1rem", borderRadius: "1rem", background: "var(--primary)", color: "white", border: "none", cursor: "pointer", fontWeight: 800, fontSize: "1.05rem", boxShadow: "0 4px 20px rgba(99,102,241,0.3)" }}>
+              Request a Session
+            </button>
+          </div>
         )}
 
         {/* Booking confirmed */}
@@ -503,10 +501,10 @@ export default function TherapistProfilePage() {
             )}
 
             <div style={{ display: "flex", gap: "0.75rem" }}>
-              <button onClick={() => setShowBooking(false)}
-                style={{ flex: 1, padding: "0.85rem", borderRadius: "0.75rem", background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", cursor: "pointer", fontWeight: 600 }}>
+              <Link href="/marketplace"
+                style={{ flex: 1, padding: "0.85rem", borderRadius: "0.75rem", background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", cursor: "pointer", fontWeight: 600, textDecoration: "none", textAlign: "center" }}>
                 Cancel
-              </button>
+              </Link>
               <button onClick={handleBook} disabled={submitting || !form.parent_name || !form.parent_email || !form.scheduled_date || !form.scheduled_time}
                 style={{ flex: 2, padding: "0.85rem", borderRadius: "0.75rem", background: "var(--primary)", color: "white", border: "none", cursor: "pointer", fontWeight: 800, opacity: (submitting || !form.parent_name || !form.parent_email || !form.scheduled_date || !form.scheduled_time) ? 0.6 : 1 }}>
                 {submitting ? "Sending Request..." : "Send Booking Request →"}

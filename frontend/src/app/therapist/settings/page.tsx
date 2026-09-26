@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -237,12 +237,24 @@ export default function TherapistSettingsPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--background)", padding: "2rem" }}>
-      {/* Top bar */}
-      <div style={{ maxWidth: "800px", margin: "0 auto", marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/therapist/dashboard" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-          <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--foreground)" }}>← Back to Dashboard</span>
+    <div style={{ minHeight: "100vh", background: "var(--background)", paddingBottom: "4rem" }}>
+      {/* Top bar Header */}
+      <div style={{ borderBottom: "1px solid var(--border)", background: "var(--card)", padding: "1rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
+            <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
+            <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
+          </svg>
+          <span style={{ fontWeight: 700, color: "var(--foreground)" }}>Lumio AI</span>
+          <span style={{ color: "var(--muted-foreground)", fontSize: "0.85rem" }}>/ Edit Profile</span>
         </Link>
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <Link href="/therapist/dashboard" style={{ padding: "0.5rem 1rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "white", color: "var(--foreground)", textDecoration: "none", fontSize: "0.875rem", fontWeight: 600 }}>
+            ← Back to Dashboard
+          </Link>
+          <UserButton />
+        </div>
       </div>
 
       <div className="card" style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
@@ -425,6 +437,30 @@ export default function TherapistSettingsPage() {
                 <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--muted-foreground)" }}>Razorpay Account ID</label>
                 <input type="text" value={form.razorpay_account_id} onChange={e => setForm(f => ({ ...f, razorpay_account_id: e.target.value }))} style={{ padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)" }} />
               </div>
+              
+              <div style={{ borderTop: "1px solid var(--border)", margin: "1rem 0" }}></div>
+              
+              <h4 style={{ fontSize: "1rem", fontWeight: 600 }}>Location Details</h4>
+              <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Adding your location helps parents find therapists near them.</p>
+              
+              <div style={{ display: "grid", gap: "0.4rem" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--muted-foreground)" }}>Clinic/Practice Address</label>
+                <textarea rows={2} value={form.address || ""} onChange={e => setForm(f => ({...f, address: e.target.value}))} style={{ padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", resize: "vertical" }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+                <div style={{ display: "grid", gap: "0.4rem" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--muted-foreground)" }}>City</label>
+                  <input type="text" value={form.city || ""} onChange={e => setForm(f => ({...f, city: e.target.value}))} style={{ padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)" }} />
+                </div>
+                <div style={{ display: "grid", gap: "0.4rem" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--muted-foreground)" }}>State</label>
+                  <input type="text" value={form.state || ""} onChange={e => setForm(f => ({...f, state: e.target.value}))} style={{ padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)" }} />
+                </div>
+                <div style={{ display: "grid", gap: "0.4rem" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--muted-foreground)" }}>Pincode</label>
+                  <input type="text" value={form.pincode || ""} onChange={e => setForm(f => ({...f, pincode: e.target.value}))} style={{ padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)" }} />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -493,7 +529,10 @@ export default function TherapistSettingsPage() {
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem", borderTop: "1px solid var(--border)", paddingTop: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "1rem", borderTop: "1px solid var(--border)", paddingTop: "2rem" }}>
+            <button type="button" onClick={() => router.push('/therapist/dashboard')} style={{ padding: "0.75rem 2rem", borderRadius: "0.5rem", background: "transparent", color: "var(--foreground)", border: "1px solid var(--border)", cursor: "pointer", fontWeight: 700, fontSize: "1rem" }}>
+              Cancel
+            </button>
             <button type="submit" disabled={saving} style={{ padding: "0.75rem 2rem", borderRadius: "0.5rem", background: "var(--primary)", color: "white", border: "none", cursor: "pointer", fontWeight: 700, fontSize: "1rem" }}>
               {saving ? "Saving..." : "Save Changes"}
             </button>
