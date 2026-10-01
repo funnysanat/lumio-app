@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import SideDrawer from "@/components/SideDrawer";
 
 type Video = {
   id: string;
@@ -86,17 +87,23 @@ export default function FeedPage() {
   return (
     <div>
       <header className="header">
-        <Link href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
-            <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
-            <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
-          </svg>
-          Lumio AI
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <SideDrawer />
+          <Link href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
+              <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
+              <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
+            </svg>
+            Lumio AI
+          </Link>
+        </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <Link href="/dashboard" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Dashboard</Link>
-          <Link href="/marketplace" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Find Therapists</Link>
+          <div className="desktop-nav-links" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <Link href="/dashboard" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Dashboard</Link>
+            <Link href="/marketplace" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Find Therapists</Link>
+          </div>
+          <UserButton />
         </div>
       </header>
 

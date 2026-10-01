@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
+import SideDrawer from "@/components/SideDrawer";
 import SessionSummaryModal from "./SessionSummaryModal";
 
 type Booking = {
@@ -138,7 +139,9 @@ export default function TherapistDashboardPage() {
     <div style={{ minHeight: "100vh", background: "var(--background)", paddingBottom: "4rem" }}>
       {/* Top bar */}
       <div style={{ borderBottom: "1px solid var(--border)", background: "var(--card)", padding: "1rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <SideDrawer />
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
             <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
@@ -146,7 +149,8 @@ export default function TherapistDashboardPage() {
           </svg>
           <span style={{ fontWeight: 700, color: "var(--foreground)" }}>Lumio AI</span>
           <span style={{ color: "var(--muted-foreground)", fontSize: "0.85rem" }}>/ Therapist Dashboard</span>
-        </Link>
+          </Link>
+        </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           {profile && (
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>

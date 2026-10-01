@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth, UserButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import SideDrawer from "@/components/SideDrawer";
 
 const SPECIALISATIONS = [
   { value: "autism", label: "Autism (ASD)" },
@@ -240,7 +241,9 @@ export default function TherapistSettingsPage() {
     <div style={{ minHeight: "100vh", background: "var(--background)", paddingBottom: "4rem" }}>
       {/* Top bar Header */}
       <div style={{ borderBottom: "1px solid var(--border)", background: "var(--card)", padding: "1rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <SideDrawer />
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
             <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
@@ -248,9 +251,10 @@ export default function TherapistSettingsPage() {
           </svg>
           <span style={{ fontWeight: 700, color: "var(--foreground)" }}>Lumio AI</span>
           <span style={{ color: "var(--muted-foreground)", fontSize: "0.85rem" }}>/ Edit Profile</span>
-        </Link>
+          </Link>
+        </div>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <Link href="/therapist/dashboard" style={{ padding: "0.5rem 1rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "white", color: "var(--foreground)", textDecoration: "none", fontSize: "0.875rem", fontWeight: 600 }}>
+          <Link href="/therapist/dashboard" className="hide-on-mobile" style={{ padding: "0.5rem 1rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "white", color: "var(--foreground)", textDecoration: "none", fontSize: "0.875rem", fontWeight: 600 }}>
             ← Back to Dashboard
           </Link>
           <UserButton />

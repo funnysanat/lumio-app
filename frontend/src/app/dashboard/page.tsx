@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UI_STRINGS } from '@/utils/i18n';
 import { useAppStore } from '@/store/useAppStore';
+import SideDrawer from "@/components/SideDrawer";
 
 function NotificationBell() {
   const { getToken } = useAuth();
@@ -178,25 +179,30 @@ export default function DashboardPage() {
   return (
     <div>
       <header className="header">
-        <Link href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <SideDrawer />
+          <Link href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
             <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
             <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
           </svg>
-          Lumio AI
-        </Link>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <Link href="/dashboard/feed" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Therapy Videos</Link>
-          <Link href="/dashboard/progress" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Progress</Link>
-          <Link href="/settings" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Settings</Link>
-          <Link href="/pricing" style={{ 
-            color: 'white', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none',
-            background: 'linear-gradient(135deg, #38bdf8 0%, #a78bfa 100%)', 
-            padding: '0.4rem 0.8rem', borderRadius: '1rem', marginLeft: '0.5rem'
-          }}>
-            Upgrade
+            Lumio AI
           </Link>
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div className="desktop-nav-links" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <Link href="/dashboard/feed" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Therapy Videos</Link>
+            <Link href="/dashboard/progress" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Progress</Link>
+            <Link href="/settings" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Settings</Link>
+            <Link href="/pricing" style={{ 
+              color: 'white', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none',
+              background: 'linear-gradient(135deg, #38bdf8 0%, #a78bfa 100%)', 
+              padding: '0.4rem 0.8rem', borderRadius: '1rem', marginLeft: '0.5rem'
+            }}>
+              Upgrade
+            </Link>
+          </div>
           
           <div style={{ marginLeft: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <NotificationBell />
@@ -208,8 +214,8 @@ export default function DashboardPage() {
       <main className="page-wrapper container-lg animate-fade-in">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
           <div>
-            <h1 style={{ margin: 0 }}>{greeting}, {firstName}!</h1>
-            <p style={{ color: '#a1a1aa', margin: '0.5rem 0 0 0' }}>Here is the personalised plan for today.</p>
+            <h1 style={{ margin: 0, fontWeight: 800, fontSize: "2.5rem", letterSpacing: "-0.03em", color: "var(--foreground)" }}>{greeting}, {firstName}!</h1>
+            <p style={{ color: 'var(--muted-foreground)', fontSize: "1.1rem", margin: '0.5rem 0 0 0' }}>Here is the personalised plan for today.</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
             <p style={{ fontWeight: 600, color: 'var(--primary)', margin: 0 }}>Today</p>

@@ -366,7 +366,7 @@ export default function WorkshopsPage() {
           </div>
         ) : (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "2rem" }}>
+            <div className="mobile-card-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "2rem" }}>
               {displaySessions.map(s => renderCard(s, activeTab === "enrolled"))}
             </div>
             

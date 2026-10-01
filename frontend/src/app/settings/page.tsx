@@ -3,6 +3,7 @@ import { UserButton } from "@clerk/nextjs";
 
 import { auth } from "@clerk/nextjs/server";
 import ThemeSelector from "@/components/ThemeSelector";
+import SideDrawer from "@/components/SideDrawer";
 
 export default async function SettingsPage() {
   const { getToken } = await auth();
@@ -25,21 +26,23 @@ export default async function SettingsPage() {
   return (
     <div>
       <header className="header">
-        <Link href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
-            <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
-            <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
-          </svg>
-          Lumio AI
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <SideDrawer />
+          <Link href="/" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
+              <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
+              <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
+            </svg>
+            Lumio AI
+          </Link>
+        </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <Link href="/dashboard" style={{ color: '#a1a1aa', fontSize: '0.875rem' }}>Dashboard</Link>
           <UserButton />
         </div>
       </header>
 
-      <main className="page-wrapper container-sm animate-fade-in">
+      <main className="page-wrapper container-md animate-fade-in">
         <h1 style={{ marginBottom: '2rem' }}>Settings</h1>
 
         <section style={{ marginBottom: '3rem' }}>
@@ -54,7 +57,7 @@ export default async function SettingsPage() {
               </div>
               <span className="badge" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#4ade80' }}>Active</span>
             </div>
-            <button className="btn btn-outline" style={{ marginTop: '1.5rem', width: '100%' }}>Manage Subscription</button>
+            <Link href="/pricing" className="btn btn-outline" style={{ marginTop: '1.5rem', width: '100%', textAlign: 'center', display: 'block' }}>Manage Subscription</Link>
           </div>
         </section>
 

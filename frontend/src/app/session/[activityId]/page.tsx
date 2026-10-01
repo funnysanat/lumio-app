@@ -4,41 +4,33 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
 
 import { UI_STRINGS } from '@/utils/i18n';
 import InteractiveGame from '@/components/InteractiveGame';
+import SideDrawer from '@/components/SideDrawer';
 
 const SessionHeader = ({ children }: { children?: React.ReactNode }) => (
-  <header
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      height: "64px",
-      backgroundColor: "var(--card-bg)",
-      borderBottom: "1px solid var(--border)",
-      display: "flex",
-      alignItems: "center",
-      padding: "0 1.5rem",
-      zIndex: 50,
-      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-      justifyContent: "space-between"
-    }}
-  >
-    <Link 
-      href="/dashboard" 
-      className="btn btn-outline" 
-      onClick={() => window.speechSynthesis.cancel()}
-      style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "0.875rem", textDecoration: "none" }}
-    >
-      ← Back to Dashboard
-    </Link>
-    <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "var(--foreground)", position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
-      Activity Session
-    </h1>
-    <div style={{ width: "200px", display: "flex", justifyContent: "flex-end" }}>{children}</div>
+  <header className="header" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50 }}>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <SideDrawer />
+      <Link href="/dashboard" className="logo" onClick={() => window.speechSynthesis.cancel()} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
+          <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
+          <rect x="8" y="5" width="8" height="8" rx="2.5" fill="#f472b6" />
+        </svg>
+        <span style={{ display: 'none' }} className="mobile-hidden">Lumio AI</span>
+      </Link>
+    </div>
+    
+    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+      {children}
+      <Link href="/dashboard" className="btn btn-outline" onClick={() => window.speechSynthesis.cancel()} style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
+        Exit
+      </Link>
+      <UserButton />
+    </div>
   </header>
 );
 

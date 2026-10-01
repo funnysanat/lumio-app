@@ -30,15 +30,15 @@ export default async function Home() {
         </div>
       </header>
 
-      <main className="hero animate-fade-in">
-        <div className="container">
-          <h1 style={{ fontSize: '3.5rem', lineHeight: '1.2', marginBottom: '1.5rem' }}>
+      <main className="hero animate-fade-in" style={{ overflowX: 'hidden' }}>
+        <div className="container" style={{ textAlign: 'center', padding: '0 1rem' }}>
+          <h1>
             Helping Moms Connect & <br /> Communicate
           </h1>
-          <p style={{ maxWidth: '750px', margin: '0 auto 2.5rem auto', fontSize: '1.25rem', lineHeight: '1.6' }}>
+          <p>
             Lumio AI is your daily companion. We bridge the gap between therapy sessions by bringing expert-inspired, play-based strategies into your living room. Empower yourself to help your child communicate better every day.
           </p>
-          <div className="hero-actions">
+          <div className="hero-actions" style={{ justifyContent: 'center' }}>
             {userId ? (
               <Link href="/dashboard" className="btn btn-primary">
                 Go to Dashboard

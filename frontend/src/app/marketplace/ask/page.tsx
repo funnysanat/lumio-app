@@ -98,57 +98,10 @@ export default function AskQuestionPage() {
         </div>
       </div>
 
-      <main className="container-lg" style={{ marginTop: "2rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
-        {/* Left Column: Ask Form */}
-        <div>
-          <div className="card">
-            <h2 style={{ fontSize: "1.25rem", margin: "0 0 1rem 0" }}>Submit a New Question</h2>
-            <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
-              Have a specific doubt or concern? Ask our network of verified pediatric therapists. The first available expert will review and answer it!
-            </p>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label className="form-label">Your Question</label>
-                <textarea
-                  className="form-input"
-                  rows={5}
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="e.g., My 4-year-old refuses to eat anything green, what sensory strategies can I use?"
-                  required
-                />
-              </div>
-              
-              <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "0.5rem", padding: "1rem", marginBottom: "1.5rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
-                  <span style={{ color: "#64748b" }}>Consultation Fee</span>
-                  <span style={{ fontWeight: 600 }}>₹199</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem", fontSize: "0.9rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "0.75rem" }}>
-                  <span style={{ color: "#64748b" }}>Platform Fee (5%)</span>
-                  <span style={{ fontWeight: 600 }}>₹10</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                  <span style={{ fontWeight: 700 }}>Total</span>
-                  <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>₹209</span>
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.5rem" }}>Usually answered within 2-4 hours.</div>
-              </div>
-
-              <button 
-                type="submit" 
-                disabled={submitting || !question.trim()}
-                style={{ width: "100%", padding: "1rem", background: "var(--primary)", color: "white", border: "none", borderRadius: "0.75rem", fontSize: "1rem", fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer" }}
-              >
-                {submitting ? "Processing Payment..." : "Pay ₹209 & Ask Question"}
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {/* Right Column: History */}
-        <div>
+      <main className="container-lg mobile-stack" style={{ marginTop: "2rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 350px), 1fr))", gap: "2rem", overflowX: "hidden" }}>
+        
+        {/* Top/Left Column: History */}
+        <div style={{ display: "flex", flexDirection: "column", order: -1 }}>
           <h2 style={{ fontSize: "1.25rem", margin: "0 0 1rem 0" }}>My Consultations</h2>
           
           {loading ? (
@@ -205,6 +158,54 @@ export default function AskQuestionPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Bottom/Right Column: Ask Form */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div className="card">
+            <h2 style={{ fontSize: "1.25rem", margin: "0 0 1rem 0" }}>Submit a New Question</h2>
+            <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+              Have a specific doubt or concern? Ask our network of verified pediatric therapists. The first available expert will review and answer it!
+            </p>
+            
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label className="form-label">Your Question</label>
+                <textarea
+                  className="form-input"
+                  rows={5}
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="e.g., My 4-year-old refuses to eat anything green, what sensory strategies can I use?"
+                  required
+                />
+              </div>
+              
+              <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "0.5rem", padding: "1rem", marginBottom: "1.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+                  <span style={{ color: "#64748b" }}>Consultation Fee</span>
+                  <span style={{ fontWeight: 600 }}>₹199</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem", fontSize: "0.9rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "0.75rem" }}>
+                  <span style={{ color: "#64748b" }}>Platform Fee (5%)</span>
+                  <span style={{ fontWeight: 600 }}>₹10</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                  <span style={{ fontWeight: 700 }}>Total</span>
+                  <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>₹209</span>
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.5rem" }}>Usually answered within 2-4 hours.</div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={submitting || !question.trim()}
+                style={{ width: "100%", padding: "1rem", background: "var(--primary)", color: "white", border: "none", borderRadius: "0.75rem", fontSize: "1rem", fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer" }}
+              >
+                {submitting ? "Processing Payment..." : "Pay ₹209 & Ask Question"}
+              </button>
+            </form>
+          </div>
         </div>
       </main>
     </div>

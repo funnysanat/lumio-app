@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from "@/components/ThemeProvider";
+import BottomNav from "@/components/BottomNav";
 import "./globals.css";
 
 const inter = Inter({
@@ -34,6 +35,7 @@ export default function RootLayout({
         >
           <ThemeProvider>
             {children}
+            <BottomNav />
           </ThemeProvider>
         </body>
       </html>

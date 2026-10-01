@@ -278,8 +278,8 @@ export default function ChildProfilePage() {
                 <span style={{ fontSize: '0.75rem', color: '#a1a1aa', marginTop: '0.25rem', display: 'block' }}>We use this to find therapists near you.</span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
-                <button type="submit" className="btn btn-primary">
+              <div className="mobile-sticky-cta" style={{ justifyContent: 'flex-end' }}>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
                   Next Step: Milestones
                 </button>
               </div>
@@ -314,9 +314,9 @@ export default function ChildProfilePage() {
                 ))}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem' }}>
-                <button type="button" className="btn btn-outline" onClick={() => setStep(1)}>Back</button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+              <div className="mobile-sticky-cta">
+                <button type="button" className="btn btn-outline" style={{ flex: 1, marginRight: '1rem' }} onClick={() => setStep(1)}>Back</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 2 }} disabled={loading}>
                   {loading ? 'Saving...' : 'Finish Profile'}
                 </button>
               </div>

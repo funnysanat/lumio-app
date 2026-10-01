@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import SideDrawer from "@/components/SideDrawer";
 
 type GroupSessionEnrollment = {
   id: string;
@@ -105,7 +106,9 @@ export default function TherapistGroupSessionsPage() {
     <div style={{ minHeight: "100vh", background: "var(--background)", paddingBottom: "4rem" }}>
       {/* Top bar Header */}
       <div style={{ borderBottom: "1px solid var(--border)", background: "var(--card)", padding: "1rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <SideDrawer />
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="14" width="8" height="8" rx="2.5" fill="#38bdf8" />
             <rect x="13" y="14" width="8" height="8" rx="2.5" fill="#a78bfa" />
@@ -113,9 +116,10 @@ export default function TherapistGroupSessionsPage() {
           </svg>
           <span style={{ fontWeight: 700, color: "var(--foreground)" }}>Lumio AI</span>
           <span style={{ color: "var(--muted-foreground)", fontSize: "0.85rem" }}>/ Workshops</span>
-        </Link>
+          </Link>
+        </div>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <Link href="/therapist/dashboard" style={{ padding: "0.5rem 1rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "white", color: "var(--foreground)", textDecoration: "none", fontSize: "0.875rem", fontWeight: 600 }}>
+          <Link href="/therapist/dashboard" className="hide-on-mobile" style={{ padding: "0.5rem 1rem", borderRadius: "2rem", border: "1px solid var(--border)", background: "white", color: "var(--foreground)", textDecoration: "none", fontSize: "0.875rem", fontWeight: 600 }}>
             ← Back to Dashboard
           </Link>
           <UserButton />
@@ -248,8 +252,8 @@ export default function TherapistGroupSessionsPage() {
 
       {/* Schedule Modal */}
       {showModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
-          <div className="card" style={{ width: "100%", maxWidth: "500px", padding: "2rem", display: "flex", flexDirection: "column", gap: "1.5rem", maxHeight: "90vh", overflowY: "auto" }}>
+        <div className="modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
+          <div className="card modal-content" style={{ width: "100%", maxWidth: "500px", padding: "2rem", display: "flex", flexDirection: "column", gap: "1.5rem", maxHeight: "90vh", overflowY: "auto" }}>
             <h2 style={{ margin: 0 }}>Schedule Workshop</h2>
             <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div style={{ display: "grid", gap: "0.4rem" }}>

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getUserRole } from "@/utils/authRole";
 import Link from "next/link";
+import SideDrawer from "@/components/SideDrawer";
 
 export default async function MarketplaceLayout({
   children,
@@ -34,13 +35,16 @@ export default async function MarketplaceLayout({
           justifyContent: "space-between"
         }}
       >
-        <Link 
-          href="/dashboard" 
-          className="btn btn-outline" 
-          style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "0.875rem", textDecoration: "none" }}
-        >
-          ← Back to Dashboard
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <SideDrawer />
+          <Link 
+            href="/dashboard" 
+            className="btn btn-outline hide-on-mobile" 
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "0.875rem", textDecoration: "none" }}
+          >
+            ← Back to Dashboard
+          </Link>
+        </div>
         <h1 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, color: "var(--foreground)", position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
           Therapist Marketplace
         </h1>

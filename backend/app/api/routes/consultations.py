@@ -135,7 +135,7 @@ async def get_my_consultations(
     if current_user.role == "parent":
         result = await db.execute(
             select(MicroConsultation)
-            .options(selectinload(MicroConsultation.therapist).selectinload(TherapistProfile.user))
+            .options(selectinload(MicroConsultation.therapist))
             .where(MicroConsultation.parent_id == current_user.id)
             .order_by(MicroConsultation.created_at.desc())
         )

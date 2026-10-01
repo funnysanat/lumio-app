@@ -154,7 +154,7 @@ export default function MarketplacePage() {
         </p>
 
         {/* Filters */}
-        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", maxWidth: "900px", margin: "0 auto" }}>
+        <div className="mobile-stack" style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", maxWidth: "900px", margin: "0 auto" }}>
           <input
             placeholder="🏙 City"
             value={city}
@@ -242,7 +242,7 @@ function TherapistCard({ therapist: t }: { therapist: Therapist }) {
 
   return (
     <Link href={`/marketplace/${t.id}`} style={{ textDecoration: "none" }}>
-      <div className="card" style={{
+      <div className="card mobile-card-grid" style={{
         padding: "1.5rem",
         display: "grid",
         gridTemplateColumns: "auto 1fr auto",
